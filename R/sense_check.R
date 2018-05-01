@@ -8,8 +8,9 @@
 #' @export
 #'
 #' @examples
-examine_NAs <- function(elementid){
-
+examine_NAs <- function(data, column){
+  column <- enquo(column)
+  data %>% filter(is.na(!!column))
 }
 
 
@@ -37,6 +38,26 @@ examine_duplicates <- function(element){
 #'
 #' @examples
 examine_zero_composition <- function(element){
+
+}
+
+
+#' Sense check columns which are in two files but do not match
+#'
+#' @param data
+#'
+#' @return
+#' @export
+#'
+#' @examples
+examine_duplicate_column_differences <- function(data){
+  # identify pairs
+
+  # identify mismatches
+
+  # return mismatches in list
+
+
 
 }
 

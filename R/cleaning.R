@@ -2,6 +2,9 @@
 
 #' Cleans up and removes all the edge cases and odd phenomena in the PDS data
 #'
+#' To see the data exploration that has resulted in the following adjustments, see
+#' the sense checking cleans vignette.
+#'
 #' Convert playing field NAs to zeroes, see \code{\link{examine_NAs}}
 #'
 #' Set windows NAs to zeroes, see \code{\link{examine_NAs}}
@@ -68,6 +71,9 @@
 #'
 #' @examples
 cleaning <- function(element_data){
+  element_data %>%
+    # Convert playing field NAs to zeroes
+    mutate(pl)
 
 }
 
