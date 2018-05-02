@@ -3,11 +3,10 @@
 #' #' Queries the SQL server for the appropriate PDS data
 #' #'
 #' #' @examples
-#' read_PDS_SQL <- function(){
-#'
-#'   #
-#'
+#' \dontrun{
+#' read_PDS_SQL <- function()
 #' }
+
 
 
 

@@ -81,9 +81,11 @@
 #' #' @seealso \code{\link{blockbuster_pds_repair_costs}}
 #' #' @export
 #' #' @examples
+#' \dontrun{
 #' #' x <- blockcoster_lookup(
 #' #' blockbuster_pds[1:10, ]$elementid,
 #' #'  blockbuster_pds[1:10, ]$grade)
+#' }
 #'
 #' blockcoster_lookup <- function(
 #'   the_elementid, the_grade, costs_lookup = blockbuster_pds_repair_costs

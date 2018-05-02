@@ -5,9 +5,6 @@
 #' @param elementid
 #'
 #' @return
-#' @export
-#'
-#' @examples
 examine_NAs <- function(data, column){
   column <- enquo(column)
   data %>% filter(is.na(!!column))
@@ -19,9 +16,6 @@ examine_NAs <- function(data, column){
 #' @param element
 #'
 #' @return
-#' @export
-#'
-#' @examples
 examine_duplicates <- function(element){
 
 
@@ -34,9 +28,6 @@ examine_duplicates <- function(element){
 #' @param element
 #'
 #' @return
-#' @export
-#'
-#' @examples
 examine_zero_composition <- function(element){
 
 }
@@ -47,9 +38,6 @@ examine_zero_composition <- function(element){
 #' @param data
 #'
 #' @return
-#' @export
-#'
-#' @examples
 examine_duplicate_column_differences <- function(data){
   # identify pairs
 

@@ -67,9 +67,6 @@
 #' @param element_data
 #'
 #' @return
-#' @export
-#'
-#' @examples
 cleaning <- function(element_data){
   element_data %>%
     # Convert playing field NAs to zeroes
@@ -83,9 +80,6 @@ cleaning <- function(element_data){
 #' @param element_data
 #'
 #' @return
-#' @export
-#'
-#' @examples
 separate_External <- function(element_data){
 
 }
