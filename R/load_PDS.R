@@ -14,7 +14,7 @@
 #' Loads PDS data from csv files
 #'
 #' By default, the csv files are expected to be found in a folder called
-#' \code{data} and be called \code{PDS_full_establishment.csv},
+#' \code{PDS} and be called \code{PDS_full_establishment.csv},
 #' \code{PDS_full_building.csv} and \code{PDS_full_condition.csv}
 #'
 #' @param establishment_path character. Path to the establishment level data.
@@ -34,11 +34,11 @@
 #' read_PDS_csv("./data/est.csv", ",", "./data/build.csv", ",", "./data/comp.csv", ",")
 #' }
 #'
-read_PDS_csv <- function(establishment_path = "./data/PDS_full_establishment.csv",
+read_PDS_csv <- function(establishment_path = "./PDS/PDS_full_establishment.csv",
                          establishment_sep = "\t",
-                         building_path = "./data/PDS_full_building.csv",
+                         building_path = "./PDS/PDS_full_building.csv",
                          building_sep = ",",
-                         condition_path = "./data/PDS_full_condition.csv",
+                         condition_path = "./PDS/PDS_full_condition.csv",
                          condition_sep = "\t"
                          ){
 

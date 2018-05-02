@@ -12,24 +12,26 @@ test_that("Failure produces informative error message", {
   write(1:10, file = notafile)
   file.remove(notafile)
 
-  expect_error(read_PDS_csv(establishment_path = notafile),
+  expect_error(read_PDS_csv(establishment_path = notafile, building_path = csv, condition_path = csv),
                paste0("establishment_path: The file does not exist"))
-  expect_error(read_PDS_csv(establishment_path = csv, building_path = notafile),
+  expect_error(read_PDS_csv(establishment_path = csv, building_path = notafile, condition_path = csv),
                paste0("building_path: The file does not exist"))
   expect_error(read_PDS_csv(establishment_path = csv, building_path = csv, condition_path = notafile),
                paste0("condition_path: The file does not exist"))
 
-  expect_error(read_PDS_csv(establishment_path = notcsv),
+  expect_error(read_PDS_csv(establishment_path = notcsv, building_path = csv, condition_path = csv),
                paste0("establishment_path: The file is not a csv file"))
-  expect_error(read_PDS_csv(establishment_path = csv, building_path = notcsv),
+  expect_error(read_PDS_csv(establishment_path = csv, building_path = notcsv, condition_path = csv),
                paste0("building_path: The file is not a csv file"))
   expect_error(read_PDS_csv(establishment_path = csv, building_path = csv, condition_path = notcsv),
                paste0("condition_path: The file is not a csv file"))
 
-  expect_error(read_PDS_csv(establishment_path = csv, establishment_sep = ","),
+  expect_error(read_PDS_csv(establishment_path = csv, establishment_sep = ",",
+                            condition_path = csv, building_path = csv),
                "establishment_path: The file contains only one column. Have you specified the column divider correctly?")
   expect_error(read_PDS_csv(establishment_path = csv2, establishment_sep = ",",
-                            building_path = csv, building_sep = ","),
+                            building_path = csv, building_sep = ",",
+                            condition_path = csv),
                "building_path: The file contains only one column. Have you specified the column divider correctly?")
   expect_error(read_PDS_csv(establishment_path = csv2, establishment_sep = ",",
                             building_path = csv2, building_sep = ",",
@@ -42,7 +44,7 @@ test_that("Failure produces informative error message", {
 })
 
 test_that("successfully pulls files from default path", {
-  if(!file.exists("C:/Users/PCURTIS/OneDrive - Department for Education/Documents/Projects/Blockbuster Model Resources/Data cleaning/data_ext/PDS_full_establishment.csv"))
+  if(!file.exists("./PDS/PDS_full_establishment.csv"))
     skip("Testing not being run on local machine")
 
   expect_failure(expect_error(read_PDS_csv()))
@@ -50,6 +52,8 @@ test_that("successfully pulls files from default path", {
 })
 
 test_that("output contains the correct three objects", {
+  if(!file.exists("./PDS/PDS_full_establishment.csv"))
+    skip("Testing not being run on local machine")
   test <- read_PDS_csv()
   expect_equal(names(test), c("establishment", "building", "condition"))
 })
@@ -75,6 +79,8 @@ test_that("Output should not be larger than the component level input", {
 context("Testing create_PDS")
 
 test_that("create_PDS loads PDS data", {
+  if(!file.exists("./PDS/PDS_full_establishment.csv"))
+    skip("Testing not being run on local machine")
   # check this by looking for specific rows in output
   expect_equal(create_PDS %>% filter(elementid == 1846, buildingid == 104111) %>% nrow, 1)
   expect_equal(create_PDS %>% filter(elementid == 1713, buildingid == 99653) %>% nrow, 1)
@@ -85,6 +91,8 @@ test_that("create_PDS loads PDS data", {
 })
 
 test_that("selected PDS data is present with correct values in output", {
+  if(!file.exists("./PDS/PDS_full_establishment.csv"))
+    skip("Testing not being run on local machine")
   # look at specific rows that should exist
   example1 <- data.frame(elementid = 1846, buildingid = 104111, A = 0, B = 1, C = 0, D = 0, E = 0,
                          unit_area = 244 * 6)
@@ -115,16 +123,16 @@ test_that("selected PDS data is present with correct values in output", {
                example5)
 })
 
-test_that("create_PDS gives informative error if PDS data not loaded")
-
-test_that("create_PDS output has combined all three files correctly")
-
-test_that("create_PDS output is cleaned")
-
-test_that("create_PDS output contains unit_area column")
-
-test_that("repair costs and deterioration rates are added to create_PDS output")
-
-test_that("create_PDS output has correct columns and formats for Blockbuster2")
-
-# test_that("data_prep correctly connects and downloads from SQL") # not implemented yet
+# test_that("create_PDS gives informative error if PDS data not loaded", {})
+#
+# test_that("create_PDS output has combined all three files correctly", {})
+#
+# test_that("create_PDS output is cleaned", {})
+#
+# test_that("create_PDS output contains unit_area column", {})
+#
+# test_that("repair costs and deterioration rates are added to create_PDS output", {})
+#
+# test_that("create_PDS output has correct columns and formats for Blockbuster2", {})
+#
+# # test_that("data_prep correctly connects and downloads from SQL") # not implemented yet
