@@ -1,0 +1,216 @@
+---
+title: "Sense checking data cleaning"
+author: "Peter Curtis"
+date: "1 May 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(Blockbuster2DataPrep)
+library(dplyr)
+```
+
+# Combining the condition, building and establishment files
+
+```{r data, cache = TRUE}
+# load the files
+test <- read_PDS_csv()
+```
+
+The adjustments identified in this section are incorporated into the `clean_PDS` function so `test <- clean_PDS(test)` will perform all the cleaning identified in this section.
+
+## Malformed data
+
+There is a row in the building csv which has a BusinessUnitID of 15 and no other information. This needs to be removed.
+
+```{r}
+# show building row with no data
+test$building %>% filter(BusinessUnitID == 15)
+#remove row
+test$building <- test$building %>% filter(BusinessUnitID != 15)
+```
+
+## Consistency between files
+
+We next check that there is internal consistency between variables and across files.
+
+First note that there are `r nrow(test$establishment)` rows in the establishment data.  This matches the `r unique(test$establishment$BusinessUnitID) %>% length` `BusinessUnitID` values, the `r unique(test$establishment$URN) %>% length` unique `URN` values and the `r test$establishment %>% group_by(LA.Number, DFE.number..ESTAB.) %>% nrow` combinations of `LA.Number` and `DFE.number..ESTAB`.
+
+We check the consistency of the three files by checking that there are no buildings, sites or establishments that are missing or extra in the other files.
+
+```{r}
+# These should all return TRUE, i.e. there are no mismatches
+
+# compare building data and establishment
+setequal(test$building$BusinessUnitID, test$establishment$BusinessUnitID)
+setequal(test$building$URN, test$establishment$URN)
+
+# compare condition data and establishment
+setequal(test$establishment$BusinessUnitID, test$condition$BusinessUnitID)
+setequal(test$condition$URN, test$establishment$URN)
+
+{
+  est_LADFE <- test$establishment %>%
+    mutate(LADFE = paste(.data$LA.Number, .data$DFE.number..ESTAB.)) %>% pull(LADFE)
+  con_LADFE <- test$condition %>%
+    mutate(LADFE = paste(.data$LA.Number, .data$DFE.number..ESTAB.)) %>% pull(LADFE)
+  setequal(est_LADFE, con_LADFE)
+  }
+
+# compare condition and building
+setequal(test$condition$BusinessUnitID, test$building$BusinessUnitID)
+setequal(test$condition$SiteID, test$building$SiteID)
+```
+
+There are mismatches in `SiteID`, `Site.Reference` and `BuildingID` and the combination `Site.Reference`/`Block.Reference` between the condition and building files.
+
+```{r}
+#SiteID
+setdiff(
+  union(test$building$SiteID, test$condition$SiteID),
+  intersect(test$building$SiteID, test$condition$SiteID)
+)
+```
+The only mismatched `SiteID` is 5132.  This is associated with `URN` 102890, 
+"Heathfield Junior School".  This school has 4 buildings, but only 2 have associated rows in the condition file.  Upon inspection of the PDS report and site plans, the
+missing buildings were demolished and thus not surveyed.
+
+We remove the buildings from the building file and adjust the establishment so it
+reflects the truth (note that the printed PDS report has incorrect GIFA as is includes the demolished blocks)
+
+```{r}
+# remove site 5132
+test$building <- test$building %>% filter(SiteID != 5132)
+```
+
+Note that we will need to update the number of blocks, sites, and GIFA for establishments once all extraneous entries are removed.
+
+```{r}
+# continuing to compare condition and building
+setequal(test$condition$SiteID, test$building$SiteID)
+setequal(test$condition$URN, test$building$URN)
+setequal(test$condition$Site.Reference, test$building$Site.Reference)
+setequal(test$condition$BuildingID, test$building$BuildingID)
+```
+
+We also find several building IDs that are in one file but not the other
+```{r}
+#BuildingID
+missing_buildings <- setdiff(
+  union(test$building$BuildingID, test$condition$BuildingID),
+  intersect(test$building$BuildingID, test$condition$BuildingID)
+) 
+
+missing_buildings
+```
+These are all buildings which are not in the condition file as they were not present. Spot checks with published PDS reports and visual inspection of schools through ULT mapping app confirms this.  Checked Tavistock Infant School, Ninestiles academy and Ormiston Ilkeston Enterprise Academy.
+
+```{r}
+URNS <- test$building %>% filter(BuildingID %in% missing_buildings) %>% pull(URN)
+test$establishment %>% filter(URN %in% URNS)
+```
+
+We remove the missing blocks.
+
+```{r}
+test$building <- test$building %>% filter(!BuildingID %in% missing_buildings)
+```
+
+```{r}
+setequal(test$condition$BuildingID, test$building$BuildingID)
+```
+
+```{r}
+
+# continuing to compare condition and building
+{
+  con_block <- test$condition %>%
+    mutate(block = paste(.data$Site.Reference, .data$Block.Reference)) %>%
+    pull(block)
+  build_block <- test$building %>%
+    mutate(block = paste(.data$Site.Reference, .data$Block.Reference)) %>%
+    pull(block)
+  setequal(con_block, build_block)
+}
+```
+
+There is one problem `setdiff(con_block, build_block)` appears as a mismatch.  By visually checking the following combination of the two files we see that we have 
+sometimes have '08-Library' in the building file and '08-Library, Offices & Ent'
+in the condition file.
+
+```{r}
+full_join(test$condition %>% filter(Site.Reference == 5029),
+          test$building %>% filter(Site.Reference == 5029),
+          by = "BuildingID") %>%
+  select(Site.Reference.x, Site.Reference.y, Block.Reference.x, Block.Reference.y)
+```
+ We relabel the offending `Block.Reference` in the condition file.
+ 
+```{r}
+# Relabel 08-Library,Office and Ent in condition file
+test$condition <- test$condition %>% mutate(Block.Reference = case_when(
+  .data$Site.Reference == 5029 & Block.Reference == "08-Library, Offices & Ent" ~ "08-Library",
+  TRUE ~ Block.Reference
+))
+```
+
+And the problem is fixed.
+```{r}
+{
+  con_block <- test$condition %>%
+    mutate(block = paste(.data$Site.Reference, .data$Block.Reference)) %>%
+    pull(block)
+  build_block <- test$building %>%
+    mutate(block = paste(.data$Site.Reference, .data$Block.Reference)) %>%
+    pull(block)
+  setdiff(con_block, build_block) %>%
+  length %>% `==`(0)
+}
+```
+
+We also check that the sum of building Gifa attached to an URN sum to the value in the establishment data. It turns out everything sums up correctly with a tolerance of 1 either way.
+
+```{r}
+test$building %>%
+  group_by(URN) %>% summarise(gifa = sum(Gross.internal.floor.area..m2.)) %>%
+  full_join(test$establishment, by = "URN") %>% 
+  mutate(match = isTRUE(all.equal(.data$Gross.internal.floor.area..m2., .data$gifa, tolerance = 1))) %>%
+  filter(!match) %>% select(gifa, Gross.internal.floor.area..m2.)
+```
+
+To avoid issues confusion we rename the gifa variable for buildings
+
+```{r}
+test$building <- test$building %>% rename(building.GIFA = Gross.internal.floor.area..m2.)
+test$establishment <- test$establishment %>% rename(school.GIFA = Gross.internal.floor.area..m2.)
+```
+
+We also need to update the information about the number of sites, blocks and gifa for each establishment.  The recorded GIFA, for example, may include the demolished buildings.
+
+```{r}
+# replace gifa and number of blocks in establishment data with newly computed values from building data
+test$establishment <- test$building %>% group_by(BusinessUnitID) %>%
+    summarise(new.school.GIFA = sum(building.GIFA),
+              new.no.of.block = n()
+              ) %>%
+    right_join(test$establishment) %>%
+    select(-school.GIFA, -Number.of.Blocks) %>%
+    rename(school.GIFA = new.school.GIFA,
+           Number.of.Blocks = new.no.of.block)
+
+
+# replace number of sites in establishment data with correct value computed from building data
+test$establishment <- test$building %>% group_by(BusinessUnitID, SiteID) %>%
+    summarise(new.no.of.sites = n()) %>%
+    group_by(BusinessUnitID) %>%
+    summarise(new.no.of.sites = n()) %>%
+    right_join(test$establishment) %>% select(-Number.of.Sites) %>%
+    rename(Number.of.Sites = new.no.of.sites)
+
+
+```
+ 
+ # Combining the three
+ 
+ We now combine the three tables into the one required by the`Blockbuster2` package

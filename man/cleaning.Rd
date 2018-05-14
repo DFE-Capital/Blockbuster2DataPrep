@@ -10,9 +10,12 @@ cleaning(element_data)
 \item{element_data}{}
 }
 \description{
-Convert playing field NAs to zeroes, see \code{\link{examine_NAs}}
+To see the data exploration that has resulted in the following adjustments, see
+the sense checking cleans vignette.
 }
 \details{
+Convert playing field NAs to zeroes, see \code{\link{examine_NAs}}
+
 Set windows NAs to zeroes, see \code{\link{examine_NAs}}
 
 Set composition NAs to zeroes (they are blocks with no windows, see \code{\link{examine_NAs}})

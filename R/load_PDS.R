@@ -3,9 +3,8 @@
 #' #' Queries the SQL server for the appropriate PDS data
 #' #'
 #' #' @examples
-#' \dontrun{
-#' read_PDS_SQL <- function()
-#' }
+read_PDS_SQL <- function(){}
+
 
 
 
@@ -32,7 +31,6 @@
 #' # from user supplied location
 #' read_PDS_csv("./data/est.csv", ",", "./data/build.csv", ",", "./data/comp.csv", ",")
 #' }
-#'
 read_PDS_csv <- function(establishment_path = "./PDS/PDS_full_establishment.csv",
                          establishment_sep = "\t",
                          building_path = "./PDS/PDS_full_building.csv",
@@ -137,13 +135,18 @@ create_Element <- function(data){
   data$condition %>%
     full_join(data$building) %>%
     full_join(data$establishment)
-
-
 }
 
 
 
 
+#' Title
+#'
+#' @param data The list of three dataframes produced by \code{read_PDS_csv} or \code{read_PDS_SQL}
+#'
+#' @return A single element level dataframe
+#' @examples
 remove_duplicate_columns <- function(data){
+  data$element %>% left_join(data$building) %>% left_join(data$establishment)
 
 }

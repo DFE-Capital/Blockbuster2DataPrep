@@ -4,7 +4,7 @@
 \alias{examine_NAs}
 \title{Sense check NAs by looking at them before cleaning}
 \usage{
-examine_NAs(elementid)
+examine_NAs(data, column)
 }
 \arguments{
 \item{elementid}{}

@@ -16,7 +16,5 @@ Change lift formatting
 
 Make sure number of floors is a number, not a factor.
 
-
-
 Set swimming pool to 0 or 1 instead of yes/no
 }

@@ -2,13 +2,49 @@
 % Please edit documentation in R/load_PDS.R
 \name{read_PDS_csv}
 \alias{read_PDS_csv}
-\title{Loads PDS data from csv files}
+\title{# TODO
+#
+#' Queries the SQL server for the appropriate PDS data
+#'
+#' @examples
+\dontrun{
+read_PDS_SQL <- function()
+}
+Loads PDS data from csv files}
 \usage{
-read_PDS_csv(establishment_data, building_data, element_data)
+read_PDS_csv(establishment_path = "./PDS/PDS_full_establishment.csv",
+  establishment_sep = "\\t", building_path = "./PDS/PDS_full_building.csv",
+  building_sep = ",", condition_path = "./PDS/PDS_full_condition.csv",
+  condition_sep = "\\t")
 }
 \arguments{
-\item{element_data}{}
+\item{establishment_path}{character. Path to the establishment level data.}
+
+\item{establishment_sep}{character. String used as column divider by the csv holding establishment data}
+
+\item{building_path}{character. Path to the building level data}
+
+\item{building_sep}{character. String used as column divider by the csv holding building level data}
+
+\item{condition_path}{character. Path to the component level data}
+
+\item{condition_sep}{character. String used as column divider by the csv holding component level data}
+}
+\value{
+A list containing the three data frames pulled from the csv files
 }
 \description{
-Loads PDS data from csv files
+By default, the csv files are expected to be found in a folder called
+\code{PDS} and be called \code{PDS_full_establishment.csv},
+\code{PDS_full_building.csv} and \code{PDS_full_condition.csv}
+}
+\examples{
+\dontrun{
+# from default location
+read_PDS_csv()
+
+# from user supplied location
+read_PDS_csv("./data/est.csv", ",", "./data/build.csv", ",", "./data/comp.csv", ",")
+}
+
 }

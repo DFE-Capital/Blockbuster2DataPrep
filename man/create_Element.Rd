@@ -4,8 +4,14 @@
 \alias{create_Element}
 \title{Combine the three PDS data files into an element level summary}
 \usage{
-create_Element()
+create_Element(data)
+}
+\arguments{
+\item{data}{The output from \code{\link{read_PDS_csv}} or \code{\link{read_PDS_SQL}}.}
+}
+\value{
+data.frame The three PDS data files joined into one component-level data.frame.
 }
 \description{
-Combine the three PDS data files into an element level summary
+Joins the files read in by \code{\link{read_PDS_csv}} into one element level summary
 }
