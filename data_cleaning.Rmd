@@ -15,10 +15,10 @@ library(dplyr)
 
 ```{r data, cache = TRUE}
 # load the files
-test <- read_PDS_csv()
+data_files <- read_PDS_csv()
 ```
 
-The adjustments identified in this section are incorporated into the `clean_PDS` function so `test <- clean_PDS(test)` will perform all the cleaning identified in this section.
+The adjustments identified in this section are incorporated into the `clean_PDS` function so `data_files <- clean_PDS(data_files)` will perform all the cleaning identified in this section.
 
 ## Malformed data
 
@@ -26,9 +26,9 @@ There is a row in the building csv which has a BusinessUnitID of 15 and no other
 
 ```{r}
 # show building row with no data
-test$building %>% filter(BusinessUnitID == 15)
+data_files$building %>% filter(BusinessUnitID == 15)
 #remove row
-test$building <- test$building %>% filter(BusinessUnitID != 15)
+data_files$building <- data_files$building %>% filter(BusinessUnitID != 15)
 ```
 
 ## Consistency between files
@@ -43,24 +43,24 @@ We check the consistency of the three files by checking that there are no buildi
 # These should all return TRUE, i.e. there are no mismatches
 
 # compare building data and establishment
-setequal(test$building$BusinessUnitID, test$establishment$BusinessUnitID)
-setequal(test$building$URN, test$establishment$URN)
+setequal(data_files$building$BusinessUnitID, data_files$establishment$BusinessUnitID)
+setequal(data_files$building$URN, data_files$establishment$URN)
 
 # compare condition data and establishment
-setequal(test$establishment$BusinessUnitID, test$condition$BusinessUnitID)
-setequal(test$condition$URN, test$establishment$URN)
+setequal(data_files$establishment$BusinessUnitID, data_files$condition$BusinessUnitID)
+setequal(data_files$condition$URN, data_files$establishment$URN)
 
 {
-  est_LADFE <- test$establishment %>%
+  est_LADFE <- data_files$establishment %>%
     mutate(LADFE = paste(.data$LA.Number, .data$DFE.number..ESTAB.)) %>% pull(LADFE)
-  con_LADFE <- test$condition %>%
+  con_LADFE <- data_files$condition %>%
     mutate(LADFE = paste(.data$LA.Number, .data$DFE.number..ESTAB.)) %>% pull(LADFE)
   setequal(est_LADFE, con_LADFE)
   }
 
 # compare condition and building
-setequal(test$condition$BusinessUnitID, test$building$BusinessUnitID)
-setequal(test$condition$SiteID, test$building$SiteID)
+setequal(data_files$condition$BusinessUnitID, data_files$building$BusinessUnitID)
+setequal(data_files$condition$SiteID, data_files$building$SiteID)
 ```
 
 There are mismatches in `SiteID`, `Site.Reference` and `BuildingID` and the combination `Site.Reference`/`Block.Reference` between the condition and building files.
@@ -68,8 +68,8 @@ There are mismatches in `SiteID`, `Site.Reference` and `BuildingID` and the comb
 ```{r}
 #SiteID
 setdiff(
-  union(test$building$SiteID, test$condition$SiteID),
-  intersect(test$building$SiteID, test$condition$SiteID)
+  union(data_files$building$SiteID, data_files$condition$SiteID),
+  intersect(data_files$building$SiteID, data_files$condition$SiteID)
 )
 ```
 The only mismatched `SiteID` is 5132.  This is associated with `URN` 102890, 
@@ -81,25 +81,24 @@ reflects the truth (note that the printed PDS report has incorrect GIFA as is in
 
 ```{r}
 # remove site 5132
-test$building <- test$building %>% filter(SiteID != 5132)
+data_files$building <- data_files$building %>% filter(SiteID != 5132)
 ```
 
 Note that we will need to update the number of blocks, sites, and GIFA for establishments once all extraneous entries are removed.
 
 ```{r}
 # continuing to compare condition and building
-setequal(test$condition$SiteID, test$building$SiteID)
-setequal(test$condition$URN, test$building$URN)
-setequal(test$condition$Site.Reference, test$building$Site.Reference)
-setequal(test$condition$BuildingID, test$building$BuildingID)
+setequal(data_files$condition$SiteID, data_files$building$SiteID)
+setequal(data_files$condition$URN, data_files$building$URN)
+setequal(data_files$condition$Site.Reference, data_files$building$Site.Reference)
+setequal(data_files$condition$BuildingID, data_files$building$BuildingID)
 ```
 
 We also find several building IDs that are in one file but not the other
 ```{r}
-#BuildingID
 missing_buildings <- setdiff(
-  union(test$building$BuildingID, test$condition$BuildingID),
-  intersect(test$building$BuildingID, test$condition$BuildingID)
+  union(data_files$building$BuildingID, data_files$condition$BuildingID),
+  intersect(data_files$building$BuildingID, data_files$condition$BuildingID)
 ) 
 
 missing_buildings
@@ -107,28 +106,28 @@ missing_buildings
 These are all buildings which are not in the condition file as they were not present. Spot checks with published PDS reports and visual inspection of schools through ULT mapping app confirms this.  Checked Tavistock Infant School, Ninestiles academy and Ormiston Ilkeston Enterprise Academy.
 
 ```{r}
-URNS <- test$building %>% filter(BuildingID %in% missing_buildings) %>% pull(URN)
-test$establishment %>% filter(URN %in% URNS)
+URNS <- data_files$building %>% filter(BuildingID %in% missing_buildings) %>% pull(URN)
+data_files$establishment %>% filter(URN %in% URNS)
 ```
 
 We remove the missing blocks.
 
 ```{r}
-test$building <- test$building %>% filter(!BuildingID %in% missing_buildings)
+data_files$building <- data_files$building %>% filter(!BuildingID %in% missing_buildings)
 ```
 
 ```{r}
-setequal(test$condition$BuildingID, test$building$BuildingID)
+setequal(data_files$condition$BuildingID, data_files$building$BuildingID)
 ```
 
 ```{r}
 
 # continuing to compare condition and building
 {
-  con_block <- test$condition %>%
+  con_block <- data_files$condition %>%
     mutate(block = paste(.data$Site.Reference, .data$Block.Reference)) %>%
     pull(block)
-  build_block <- test$building %>%
+  build_block <- data_files$building %>%
     mutate(block = paste(.data$Site.Reference, .data$Block.Reference)) %>%
     pull(block)
   setequal(con_block, build_block)
@@ -140,8 +139,8 @@ sometimes have '08-Library' in the building file and '08-Library, Offices & Ent'
 in the condition file.
 
 ```{r}
-full_join(test$condition %>% filter(Site.Reference == 5029),
-          test$building %>% filter(Site.Reference == 5029),
+full_join(data_files$condition %>% filter(Site.Reference == 5029),
+          data_files$building %>% filter(Site.Reference == 5029),
           by = "BuildingID") %>%
   select(Site.Reference.x, Site.Reference.y, Block.Reference.x, Block.Reference.y)
 ```
@@ -149,7 +148,7 @@ full_join(test$condition %>% filter(Site.Reference == 5029),
  
 ```{r}
 # Relabel 08-Library,Office and Ent in condition file
-test$condition <- test$condition %>% mutate(Block.Reference = case_when(
+data_files$condition <- data_files$condition %>% mutate(Block.Reference = case_when(
   .data$Site.Reference == 5029 & Block.Reference == "08-Library, Offices & Ent" ~ "08-Library",
   TRUE ~ Block.Reference
 ))
@@ -158,10 +157,10 @@ test$condition <- test$condition %>% mutate(Block.Reference = case_when(
 And the problem is fixed.
 ```{r}
 {
-  con_block <- test$condition %>%
+  con_block <- data_files$condition %>%
     mutate(block = paste(.data$Site.Reference, .data$Block.Reference)) %>%
     pull(block)
-  build_block <- test$building %>%
+  build_block <- data_files$building %>%
     mutate(block = paste(.data$Site.Reference, .data$Block.Reference)) %>%
     pull(block)
   setdiff(con_block, build_block) %>%
@@ -172,9 +171,9 @@ And the problem is fixed.
 We also check that the sum of building Gifa attached to an URN sum to the value in the establishment data. It turns out everything sums up correctly with a tolerance of 1 either way.
 
 ```{r}
-test$building %>%
+data_files$building %>%
   group_by(URN) %>% summarise(gifa = sum(Gross.internal.floor.area..m2.)) %>%
-  full_join(test$establishment, by = "URN") %>% 
+  full_join(data_files$establishment, by = "URN") %>% 
   mutate(match = isTRUE(all.equal(.data$Gross.internal.floor.area..m2., .data$gifa, tolerance = 1))) %>%
   filter(!match) %>% select(gifa, Gross.internal.floor.area..m2.)
 ```
@@ -182,35 +181,111 @@ test$building %>%
 To avoid issues confusion we rename the gifa variable for buildings
 
 ```{r}
-test$building <- test$building %>% rename(building.GIFA = Gross.internal.floor.area..m2.)
-test$establishment <- test$establishment %>% rename(school.GIFA = Gross.internal.floor.area..m2.)
+data_files$building <- data_files$building %>% rename(building.GIFA = Gross.internal.floor.area..m2.)
+data_files$establishment <- data_files$establishment %>% rename(school.GIFA = Gross.internal.floor.area..m2.)
 ```
 
 We also need to update the information about the number of sites, blocks and gifa for each establishment.  The recorded GIFA, for example, may include the demolished buildings.
 
 ```{r}
 # replace gifa and number of blocks in establishment data with newly computed values from building data
-test$establishment <- test$building %>% group_by(BusinessUnitID) %>%
+data_files$establishment <- data_files$building %>% group_by(BusinessUnitID) %>%
     summarise(new.school.GIFA = sum(building.GIFA),
               new.no.of.block = n()
               ) %>%
-    right_join(test$establishment) %>%
+    right_join(data_files$establishment) %>%
     select(-school.GIFA, -Number.of.Blocks) %>%
     rename(school.GIFA = new.school.GIFA,
            Number.of.Blocks = new.no.of.block)
 
 
 # replace number of sites in establishment data with correct value computed from building data
-test$establishment <- test$building %>% group_by(BusinessUnitID, SiteID) %>%
+data_files$establishment <- data_files$building %>% group_by(BusinessUnitID, SiteID) %>%
     summarise(new.no.of.sites = n()) %>%
     group_by(BusinessUnitID) %>%
     summarise(new.no.of.sites = n()) %>%
-    right_join(test$establishment) %>% select(-Number.of.Sites) %>%
+    right_join(data_files$establishment) %>% select(-Number.of.Sites) %>%
     rename(Number.of.Sites = new.no.of.sites)
 
 
 ```
  
+ Recall that the previous amendments can be run using `read_PDS_csv() %>% clean_PDS`
+ 
  # Combining the three
  
- We now combine the three tables into the one required by the`Blockbuster2` package
+ We now combine the three tables into the one required by the`Blockbuster2` package.  To do so we pass the list of three data files to `create_Element`.
+ 
+```{r}
+element_data <- create_Element(data_files)
+```
+ 
+Note that `create_Element` will work with both the cleaned and then raw data files.  If you use the cleaned files then the number of rows in the output will be the same as the number of rows in the raw component level data frame.  If there are any inconsistancies between the files (i.e. buildings and sites in one file but not another) then you will have more rows.
+ 
+# Cleaning component level data
+
+The component level data requires some pre-processing itself. Everything in this section can be achieved using the function call `clean_PDS`.
+
+THere are some `NA` entries in the data we need to deal with.  The column `Playing.field.area..m2.` contains the square meterage of playing fields for a school. Inspection shows there are a lot of missing entries, but none of the affected components are playing fields, that is the `NA` indicates no playing fields for that school.
+
+```{r}
+element_data %>% filter(is.na(Playing.field.area..m2.)) %>% nrow
+element_data %>% filter(is.na(Playing.field.area..m2.), Element == "Playing Fields")
+```
+
+Similarly, inspecting the `NA` entries in the `WindowsAndDoors` column we find there are only two components that are windows in buildings with `NA` for `WindowsAndDoors`.  Inspection of these two show they are data-entry errors, as can be seen by comparing the data to the PDS report for Kenilworth School and Sports College.  The perimeter should be 100 and the height should be 3.
+
+```{r}
+element_data %>% filter(is.na(WindowsAndDoors), Sub.element == "Windows and doors" )
+```
+We correct the mistaken data entry for this building.
+
+```{r}
+index <- which(element_data$BuildingID == 97667)
+element_data$building.GIFA[index] <- 463
+element_data$Perimeter..m.[index] <- 100
+element_data$Height..m.[index] <- 3
+element_data$Catering.Kitchen[index] <- "No"
+element_data$WindowsAndDoors[index] <- 45 # 15% of wall area is windows according to PDS report.  3 * 100 * 0.15 = 45
+```
+
+We can now replace any `NA`s in `WindowsAndDoors` and `Playing.field.area..m2.` with zeroes.
+
+```{r}
+element_data <- element_data %>% mutate_at(c("Playing.field.area..m2.", "WindowsAndDoors"), funs(replace(., is.na(.), 0)))
+```
+
+Looking at the PDS reports of some random blocks with supposedly no windows and doors shows many blocks with plenty of windows.  However, the windows could instead be considered to be curtain walls (these are elements 1983 and 1984 for timber and metal framed respectively).  Let's check that these blocks have curtain walls.
+
+```{r}
+element_data %>% filter(WindowsAndDoors == 0) %>%
+  group_by(BuildingID) %>% 
+  summarise(CurtainWall = all(ElementID %in% 1983:1984))
+```
+
+
+
+
+There are several `NA` entries in the `Composition` column.
+
+```{r}
+element_data %>% filter(is.na(Composition))
+```
+
+
+
+
+
+
+
+
+
+
+
+# Removing non-existent components
+
+We will **not* remove those components which are not components at all.  There are a few component types which are in the data to indicate that something is not present.  For example, that there is no wall paint.  Here are the 139 different component types:
+```{r}
+element_data %>% group_by(Element, Sub.element, Construction.Type) %>% slice(1) %>% select(ElementID, Element, Sub.element, Construction.Type)
+```
+ The model will run in less time if we remove the extraneous components.  To do so, use the `remove_element` function.

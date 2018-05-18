@@ -5,18 +5,12 @@
 #' To see the data exploration that has resulted in the following adjustments, see
 #' the sense checking cleans vignette.
 #'
-#' Convert playing field NAs to zeroes, see \code{\link{examine_NAs}}
+#' Set playing field area and windows NAs to zeroes
 #'
-#' Set windows NAs to zeroes, see \code{\link{examine_NAs}}
-#'
-#' Set composition NAs to zeroes (they are blocks with no windows, see \code{\link{examine_NAs}})
-#'
-#' Remove appropriate zero compositions.
-#'
-#' Remove "unpainted", "no wall finish" and "no ceiling" rows as they have no cost and cannot deteriorate.
+#' Set composition NAs to ones#'
 #'
 #' Moves external areas into their own blocks to avoid them skewing rebuild decisions with exaggerated repair costs.
-#'#'
+#'
 # Suspended floors use different area computations depending on whether the
 # block has a ground floor or not.  Assigning a placeholder elementid when this
 # is the case.
@@ -27,10 +21,6 @@
 # buildings.with.ground.floors <- PDS.element %>% filter(elementid == 1752) %>% pull(buildingid) %>% unique
 # # identify rows with sus floors where there are ground floors in same building
 # buildings <- buildings.with.sus.floors[buildings.with.sus.floors %in% buildings.with.ground.floors]
-#'
-#' There is one block (ID 97667) with 0 storeys and height 100m. There are no external
-#' components.  This is an office in a tower block somewhere.  Set height to 3m
-#' so we don't get unreasonable repair costs where height matters.
 #'
 #' # There are a few rows where there ground_gifa is larger than gifa, which
 # doesn't make sense.  In these cases, gifa is set to ground_gifa * No.of.storeys.
@@ -68,10 +58,33 @@
 #'
 #' @return
 cleaning <- function(element_data){
-  element_data %>%
-    # Convert playing field NAs to zeroes
-    mutate(pl)
 
+  # fix data entry mistake for Kenilworth School and Sports College
+  index <- which(element_data$BuildingID == 97667)
+  element_data$building.GIFA[index] <- 463
+  element_data$Perimeter..m.[index] <- 100
+  element_data$Height..m.[index] <- 3
+  element_data$Catering.Kitchen[index] <- "No"
+  element_data$WindowsAndDoors[index] <- 45 # 15% of wall area is windows according to PDS report.  3 * 100 * 0.15 = 45
+
+  element_data %>%
+    # change NA playing field area and NA Windows and Doors to zero
+    mutate_at(c("Playing.field.area..m2.", "WindowsAndDoors"), funs(replace(., is.na(.), 0))) %>%
+    # change NA Composition to 1
+    mutate_at("Composition", funs(replace(., is.na(.), 1))) %>%
+
+}
+
+#' Remove rows containing particular components
+#'
+#' @param data A data frame with an \code{ElementID} column
+#' @param elementid A numeric vector containing the \code{ElementID} numbers of the components you wish to remove. By default this contains the elementIDs of
+#' unpainted redecorations and components that do not exist, e.g. no ceiling.
+#'
+#' @return The data frame with the appropriate rows filtered out.
+#' @export
+remove_element <- function(data, elementid = c(1810, 1952, 1838, 1845, 1869, 1891, 1918, 1992, 1994)){
+  data %>% filter(!ElementID %in% elementid)
 }
 
 #TODO

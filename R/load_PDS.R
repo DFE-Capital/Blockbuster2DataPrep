@@ -130,7 +130,7 @@ clean_PDS <- function(PDS){
 #' Joins the files read in by \code{\link{read_PDS_csv}} into one element level summary
 #' @param data The output from \code{\link{read_PDS_csv}} or \code{\link{read_PDS_SQL}}.
 #'
-#' @return data.frame The three PDS data files joined into one component-level data.frame.
+#' @return The three PDS data files joined into one component-level data.frame.
 create_Element <- function(data){
   data$condition %>%
     full_join(data$building) %>%
@@ -140,13 +140,3 @@ create_Element <- function(data){
 
 
 
-#' Title
-#'
-#' @param data The list of three dataframes produced by \code{read_PDS_csv} or \code{read_PDS_SQL}
-#'
-#' @return A single element level dataframe
-#' @examples
-remove_duplicate_columns <- function(data){
-  data$element %>% left_join(data$building) %>% left_join(data$establishment)
-
-}
