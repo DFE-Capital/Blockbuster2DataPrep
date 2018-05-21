@@ -308,8 +308,15 @@ Once this is done, the `areafy` function will compute the appropriate size metri
 element_data <- invisible(element_data %>% areafy)
 ```
 
+# Formatting
 
+Finally, we need to relabel the columns so they match the column names used by the
+Blockbuster Deterioration model in the `Blockbuster2` package.
 
+```{r}
+element_data <- element_data %>%
+  rename_element
+```
 
 
 
@@ -330,6 +337,8 @@ The Deterioration model will run in less time if we remove the extraneous compon
 data_files <- clean_PDS(data_files) %>%
   create_element() %>%
   clean_element() %>%
-  format_element()
+  format_element() %>%
+  areafy() %>%
+  rename_element()
 ```
 

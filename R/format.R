@@ -1,16 +1,13 @@
-# TODO
-#
-#' Puts PDS data into appropriate format for blockbuster
+#' Corrects certain data types in preparation for the areafy function
 #'
-#' Remove extraneous space from "D" grade
-#'
-#' Change lift formatting to numeric.
-#'
-#' Set swimming pool to 0 or 1 instead of yes/no
-#'
+#' This function needs to be called before \code{\link{areafy}}.  It corrects
+#' some data types so \code{\link{areafy}} can correctly quantify some components.
+#' It removes the extraneous space from the "D" \code{grade} entries. It changes
+#' the `Swimming.Pool` from a yes no to a 0 or 1. It formats the `No.of.Lifts`
+#' column to be numeric.
 #' @param element_data
 #'
-#' @return
+#' @return The input with re-formatted columns.
 format_element <- function(element_data){
   element_data %>% mutate(
     Grade = case_when(Grade == "D " ~ "D",
@@ -24,4 +21,18 @@ format_element <- function(element_data){
                             No.of.Lifts == "5.000" ~ 5,
                             No.of.Lifts == "6.000" ~ 6,
                             TRUE                   ~ 0))
+}
+
+#' Rename columns so they match the required columns for the Blockbuster package
+#'
+#' @param element_data
+#'
+#' @return The input data with renamed \code{BuildingID}, \code{ElementID} and
+#'  \code{building.GIFA} columns
+rename_element <- function(element_data){
+  element_data %>%
+    rename(BuildingID = "buildingid",
+           ElementID = "elementid",
+           building.GIFA = "gifa"
+           )
 }

@@ -1,5 +1,3 @@
-#TODO
-
 #' Cleans up and removes all the edge cases and odd phenomena in the PDS data
 #'
 #' To see the data exploration that has resulted in the following adjustments, see
@@ -29,8 +27,6 @@ clean_element <- function(element_data){
     # place external areas in their own building
     mutate(BuildingID = case_when(Element == "External Areas" ~ BuildingID + 9000000,
                                   TRUE                        ~ as.numeric(BuildingID)))
-
-
 }
 
 #' Remove rows containing particular components

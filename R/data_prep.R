@@ -10,7 +10,7 @@ create_PDS <- function(){
     clean_element() %>%
   # add area to element level data
     format_element() %>%
-    areafy
-  # add repair costs and deterioration rates to element level data
+    areafy() %>%
   # format output ready for Blockbuster
+    rename_element()
 }
