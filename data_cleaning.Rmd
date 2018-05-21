@@ -224,9 +224,9 @@ Note that `create_Element` will work with both the cleaned and then raw data fil
  
 # Cleaning component level data
 
-The component level data requires some pre-processing itself. Everything in this section can be achieved using the function call `clean_PDS`.
+The component level data requires some pre-processing itself. Everything in this section can be achieved using the function call `clean_element`.
 
-THere are some `NA` entries in the data we need to deal with.  The column `Playing.field.area..m2.` contains the square meterage of playing fields for a school. Inspection shows there are a lot of missing entries, but none of the affected components are playing fields, that is the `NA` indicates no playing fields for that school.
+THere are some `NA` entries in the data we need to deal with.  The column `Playing.field.area..m2.` contains the square meterage of playing fields for a school. Inspection shows none of the affected components are playing fields, so the `NA` indicates no playing fields for that school.
 
 ```{r}
 element_data %>% filter(is.na(Playing.field.area..m2.)) %>% nrow
@@ -255,27 +255,58 @@ We can now replace any `NA`s in `WindowsAndDoors` and `Playing.field.area..m2.` 
 element_data <- element_data %>% mutate_at(c("Playing.field.area..m2.", "WindowsAndDoors"), funs(replace(., is.na(.), 0)))
 ```
 
-Looking at the PDS reports of some random blocks with supposedly no windows and doors shows many blocks with plenty of windows.  However, the windows could instead be considered to be curtain walls (these are elements 1983 and 1984 for timber and metal framed respectively).  Let's check that these blocks have curtain walls.
+Double-checking a few blocks with no windows against the PDS reports (e.g. The Green School) shows that these buildings are things like bike-sheds or other blocks with no windows.
+
+
+There are several `NA` entries in the `Composition` column.  These are harder to deal with.  While it is tempting to say these components are not there, we find some components have a cost attached, or have been assessed to be at a grade other than A.  Some are windows and doors in buildings without windows or doors (or rather, the windows and doors are part of curtain walls and can be considered as part of them).  There are too many to manually assess so we will set them all as 0.
 
 ```{r}
-element_data %>% filter(WindowsAndDoors == 0) %>%
-  group_by(BuildingID) %>% 
-  summarise(CurtainWall = all(ElementID %in% 1983:1984))
+element_data %>% filter(is.na(Composition), Grade != "A") 
 ```
-
-
-
-
-There are several `NA` entries in the `Composition` column.
 
 ```{r}
-element_data %>% filter(is.na(Composition))
+element_data <- element_data %>% mutate_at("Composition", funs(replace(., is.na(.), 0)))
 ```
 
+## Remark about areas
 
+It is important to realise that when we compute a measure of size for each component (area, or length, or count), this is affected by the composition field so any components with zero composition will end up with zero size.
 
+## External areas
 
+External area componenets are treated erratically within the data.  Sometimes they are attached to a single building on a site, sometimes they are all contained in 
+their own block within a site, with no actual building components.  It is better to be consistent and it is also useful for the Deterioration Model if all external areas are located within their own block and not attached to any building.  This way, the cost of repairing external components will not influence the decision to rebuild blocks, which unfairly biases decisions towards those blocks with large external areas.  To do this we simply add 9,000,000 to the building ID for all external components.
 
+```{r}
+element_data <- element_data %>% mutate(BuildingID = case_when(Element == "External Areas" ~ BuildingID + 9000000,
+                                                               TRUE                        ~ as.numeric(BuildingID)))
+```
+
+Recall that all the cleaning in this section is implemented within the `clean_element` function, which takes as an argument the output of `create_element`.
+
+# Quantification of components
+
+The Blockbuster Deterioration Model requires a quantification of the size of a component so it can assign an appropriate estimated repair cost.  To do so we follow the PDS methodology which is incorporated within the `areafy` function.  First we have to make sure the data is the correct type for the function.  This entails converting a variety of character vectors to numeric.  The function `format_element` performs this task. It also removes the extraneous space in the "D " `Grade` level.
+
+```{r}
+element_data <- element_data %>% mutate(Swimming.Pool = case_when(Swimming.Pool == "Yes" ~ 1,
+                                                  Swimming.Pool == "No"  ~ 0),
+                        No.of.Lifts = case_when(No.of.Lifts == "1.000" ~ 1,
+                                                No.of.Lifts == "2.000" ~ 2,
+                                                No.of.Lifts == "3.000" ~ 3,
+                                                No.of.Lifts == "4.000" ~ 4,
+                                                No.of.Lifts == "5.000" ~ 5,
+                                                No.of.Lifts == "6.000" ~ 6,
+                                                TRUE                   ~ 0))
+
+```
+
+Once this is done, the `areafy` function will compute the appropriate size metric for each component as per the PDS proforma (available on request).
+
+```{r areafy, results = 'hide', cache = TRUE}
+# invisible is used to stop printing the output to console which will cause problems due to the size of the datatable
+element_data <- invisible(element_data %>% areafy)
+```
 
 
 
@@ -288,4 +319,17 @@ We will **not* remove those components which are not components at all.  There a
 ```{r}
 element_data %>% group_by(Element, Sub.element, Construction.Type) %>% slice(1) %>% select(ElementID, Element, Sub.element, Construction.Type)
 ```
- The model will run in less time if we remove the extraneous components.  To do so, use the `remove_element` function.
+ 
+The Deterioration model will run in less time if we remove the extraneous components.  To do so, use the `remove_element` function.
+
+
+
+# Summary
+
+```{r eval = FALSE}
+data_files <- clean_PDS(data_files) %>%
+  create_element() %>%
+  clean_element() %>%
+  format_element()
+```
+
