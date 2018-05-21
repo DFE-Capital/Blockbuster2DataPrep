@@ -3,3 +3,5 @@ NULL
 
 #' @import dplyr
 NULL
+
+#' @import purrr

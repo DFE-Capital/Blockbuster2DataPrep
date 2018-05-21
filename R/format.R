@@ -23,16 +23,4 @@ format_element <- function(element_data){
                             TRUE                   ~ 0))
 }
 
-#' Rename columns so they match the required columns for the Blockbuster package
-#'
-#' @param element_data
-#'
-#' @return The input data with renamed \code{BuildingID}, \code{ElementID} and
-#'  \code{building.GIFA} columns
-rename_element <- function(element_data){
-  element_data %>%
-    rename(BuildingID = "buildingid",
-           ElementID = "elementid",
-           building.GIFA = "gifa"
-           )
-}
+

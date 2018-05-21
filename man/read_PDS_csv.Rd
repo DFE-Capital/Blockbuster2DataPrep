@@ -2,15 +2,7 @@
 % Please edit documentation in R/load_PDS.R
 \name{read_PDS_csv}
 \alias{read_PDS_csv}
-\title{# TODO
-#
-#' Queries the SQL server for the appropriate PDS data
-#'
-#' @examples
-\dontrun{
-read_PDS_SQL <- function()
-}
-Loads PDS data from csv files}
+\title{Loads PDS data from csv files}
 \usage{
 read_PDS_csv(establishment_path = "./PDS/PDS_full_establishment.csv",
   establishment_sep = "\\t", building_path = "./PDS/PDS_full_building.csv",
@@ -46,5 +38,4 @@ read_PDS_csv()
 # from user supplied location
 read_PDS_csv("./data/est.csv", ",", "./data/build.csv", ",", "./data/comp.csv", ",")
 }
-
 }

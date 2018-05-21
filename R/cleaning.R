@@ -3,14 +3,18 @@
 #' To see the data exploration that has resulted in the following adjustments, see
 #' the sense checking cleans vignette.
 #'
-#' Set playing field area and windows NAs to zeroes
+#' Set playing field area and windows NAs to zeroes.
+#'
 #' Set composition NAs to zero
 #'
-#' Moves external areas into their own blocks to avoid them skewing rebuild decisions with exaggerated repair costs.
+#' Moves external areas into their own blocks to avoid them skewing rebuild
+#' decisions with exaggerated repair costs.
+#'
+#' Set external area blocks GIFA to zero
 #'
 #' @param element_data
 #'
-#' @return
+#' @return The cleaned input.
 clean_element <- function(element_data){
 
   # fix data entry mistake for Kenilworth School and Sports College
@@ -26,7 +30,10 @@ clean_element <- function(element_data){
     mutate_at(c("Playing.field.area..m2.", "WindowsAndDoors", "Composition"), funs(replace(., is.na(.), 0))) %>%
     # place external areas in their own building
     mutate(BuildingID = case_when(Element == "External Areas" ~ BuildingID + 9000000,
-                                  TRUE                        ~ as.numeric(BuildingID)))
+                                  TRUE                        ~ as.numeric(BuildingID)),
+           # set external area blocks GIFA to zero
+           building.GIFA = case_when(BuildingID > 9000000 ~ 0,
+                                     TRUE                 ~ building.GIFA))
 }
 
 #' Remove rows containing particular components
@@ -36,7 +43,6 @@ clean_element <- function(element_data){
 #' unpainted redecorations and components that do not exist, e.g. no ceiling.
 #'
 #' @return The data frame with the appropriate rows filtered out.
-#' @export
 remove_element <- function(data, elementid = c(1810, 1952, 1838, 1845, 1869, 1891, 1918, 1992, 1994)){
   data %>% filter(!ElementID %in% elementid)
 }

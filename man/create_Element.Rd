@@ -10,7 +10,7 @@ create_Element(data)
 \item{data}{The output from \code{\link{read_PDS_csv}} or \code{\link{read_PDS_SQL}}.}
 }
 \value{
-data.frame The three PDS data files joined into one component-level data.frame.
+The three PDS data files joined into one component-level data.frame.
 }
 \description{
 Joins the files read in by \code{\link{read_PDS_csv}} into one element level summary
