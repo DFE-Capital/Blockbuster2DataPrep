@@ -1,0 +1,379 @@
+---
+title: "Producing a cleaned, formatted data set for use by Blockbuster2"
+author: "Peter Curtis"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Blockbuster2DataPrepDetail}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+library(Blockbuster2DataPrep)
+library(dplyr)
+```
+
+The following code will create an object `PDS_single` and save it into the `./data` folder.  The object is a single component-level
+table containing deterioration rates, repair costs, and with 'empty' components
+such as 'no decoration' removed.  This object uses the deterioration rates 
+produced after the [QA by Roger Thompson](https://educationgovuk.sharepoint.com/:f:/r/sites/efacam/WorkplaceDocuments/04%20Condition%20and%20Cost%20Intelligence/14_Deterioration_Model/Roger%20Thompson%20Deterioration%20Rate%20QA?csf=1) and the repair costs from the [final PDSP Cost model](https://educationgovuk.sharepoint.com/sites/efacam/_layouts/15/DocIdRedir.aspx?ID=TXETKDDE3KEP-4-5171). 
+
+```{r, results = 'hide'}
+PDS_single <- create_PDS(single_table = TRUE, remove_elements = TRUE, add_rates = TRUE, add_costs = TRUE)
+save(PDS_single, file = "./data/PDS_single.rda")
+```
+
+Alternatively, the following will produce an object called `PDS_excel` with the 
+data in a more efficient star schema
+and without the deterioration rates or costs in readiness for the `Blockbuster2` 
+version that enables input from an excel sheet that contains the relevant parameters.
+
+It will save `PDS_excel_element.rda` into the `./data` folder which is just the element data (blockbuster will create the building level itself), and it will save `PDS_excel.rda` into the `./data` folder which is all levels of data.
+
+```{r, results = 'hide'}
+PDS_excel <- create_PDS()
+PDS_excel_element <- PDS_excel$element
+# just the element level
+save(PDS_excel_element, file = "./data/PDS_excel_element.rda")
+# all data
+save(PDS_excel, file = "./data/PDS_excel.rda")
+```
+
+The remaining part of this document describes the details of the process behind
+cleaning, quantifying and formatting the data.
+
+### Combining the condition, building and establishment files
+
+```{r data, cache = TRUE}
+# load the files
+data_files <- read_PDS_csv()
+```
+
+The adjustments identified in this section are incorporated into the `clean_PDS` function so `data_files <- clean_PDS(data_files)` will perform all the cleaning identified in this section.
+
+#### Malformed data
+
+There is a row in the building csv which has a BusinessUnitID of 15 and no other information. This needs to be removed.
+
+```{r}
+# show building row with no data
+data_files$building %>% filter(BusinessUnitID == 15)
+#remove row
+data_files$building <- data_files$building %>% filter(BusinessUnitID != 15)
+```
+
+#### Consistency between files
+
+We next check that there is internal consistency between variables and across files.
+
+We check the consistency of the three files by checking that there are no buildings, sites or establishments that are missing or extra in the other files.
+
+```{r}
+# These should all return TRUE, i.e. there are no mismatches
+
+# compare building data and establishment
+setequal(data_files$building$BusinessUnitID, data_files$establishment$BusinessUnitID)
+setequal(data_files$building$URN, data_files$establishment$URN)
+
+# compare condition data and establishment
+setequal(data_files$establishment$BusinessUnitID, data_files$condition$BusinessUnitID)
+setequal(data_files$condition$URN, data_files$establishment$URN)
+
+{
+  est_LADFE <- data_files$establishment %>%
+    mutate(LADFE = paste(.data$LA.Number, .data$DFE.number..ESTAB.)) %>% pull(LADFE)
+  con_LADFE <- data_files$condition %>%
+    mutate(LADFE = paste(.data$LA.Number, .data$DFE.number..ESTAB.)) %>% pull(LADFE)
+  setequal(est_LADFE, con_LADFE)
+  }
+
+# compare condition and building
+setequal(data_files$condition$BusinessUnitID, data_files$building$BusinessUnitID)
+setequal(data_files$condition$SiteID, data_files$building$SiteID)
+```
+
+There are mismatches in `SiteID`, `Site.Reference` and `BuildingID` and the combination `Site.Reference`/`Block.Reference` between the condition and building files.
+
+```{r}
+#SiteID
+setdiff(
+  union(data_files$building$SiteID, data_files$condition$SiteID),
+  intersect(data_files$building$SiteID, data_files$condition$SiteID)
+)
+```
+The only mismatched `SiteID` is 5132.  This is associated with `URN` 102890, 
+"Heathfield Junior School".  This school has 4 buildings, but only 2 have associated rows in the condition file.  Upon inspection of the PDS report and site plans, the
+missing buildings were demolished and thus not surveyed.
+
+We remove the buildings from the building file and adjust the establishment so it
+reflects the truth (note that the printed PDS report has incorrect GIFA as is includes the demolished blocks)
+
+```{r}
+# remove site 5132
+data_files$building <- data_files$building %>% filter(SiteID != 5132)
+```
+
+Note that we will need to update the number of blocks, sites, and GIFA for establishments once all extraneous entries are removed.
+
+```{r}
+# continuing to compare condition and building
+setequal(data_files$condition$SiteID, data_files$building$SiteID)
+setequal(data_files$condition$URN, data_files$building$URN)
+setequal(data_files$condition$Site.Reference, data_files$building$Site.Reference)
+setequal(data_files$condition$BuildingID, data_files$building$BuildingID)
+```
+
+We also find several building IDs that are in one file but not the other
+```{r}
+missing_buildings <- setdiff(
+  union(data_files$building$BuildingID, data_files$condition$BuildingID),
+  intersect(data_files$building$BuildingID, data_files$condition$BuildingID)
+) 
+
+missing_buildings
+```
+These are all buildings which are not in the condition file as they were not present. Spot checks with published PDS reports and visual inspection of schools through ULT mapping app confirms this.  Checked Tavistock Infant School, Ninestiles academy and Ormiston Ilkeston Enterprise Academy.
+
+```{r}
+URNS <- data_files$building %>% filter(BuildingID %in% missing_buildings) %>% pull(URN)
+data_files$establishment %>% filter(URN %in% URNS)
+```
+
+We remove the missing blocks.
+
+```{r}
+data_files$building <- data_files$building %>% filter(!BuildingID %in% missing_buildings)
+```
+
+```{r}
+setequal(data_files$condition$BuildingID, data_files$building$BuildingID)
+```
+
+```{r}
+
+# continuing to compare condition and building
+{
+  con_block <- data_files$condition %>%
+    mutate(block = paste(.data$Site.Reference, .data$Block.Reference)) %>%
+    pull(block)
+  build_block <- data_files$building %>%
+    mutate(block = paste(.data$Site.Reference, .data$Block.Reference)) %>%
+    pull(block)
+  setequal(con_block, build_block)
+}
+```
+
+There is one problem `setdiff(con_block, build_block)` appears as a mismatch.  By visually checking the following combination of the two files we see that we have 
+sometimes have '08-Library' in the building file and '08-Library, Offices & Ent'
+in the condition file.
+
+```{r}
+full_join(data_files$condition %>% filter(Site.Reference == 5029),
+          data_files$building %>% filter(Site.Reference == 5029),
+          by = "BuildingID") %>%
+  select(Site.Reference.x, Site.Reference.y, Block.Reference.x, Block.Reference.y)
+```
+ We relabel the offending `Block.Reference` in the condition file.
+ 
+```{r}
+# Relabel 08-Library,Office and Ent in condition file
+data_files$condition <- data_files$condition %>% mutate(Block.Reference = case_when(
+  .data$Site.Reference == 5029 & Block.Reference == "08-Library, Offices & Ent" ~ "08-Library",
+  TRUE ~ Block.Reference
+))
+```
+
+And the problem is fixed.
+```{r}
+{
+  con_block <- data_files$condition %>%
+    mutate(block = paste(.data$Site.Reference, .data$Block.Reference)) %>%
+    pull(block)
+  build_block <- data_files$building %>%
+    mutate(block = paste(.data$Site.Reference, .data$Block.Reference)) %>%
+    pull(block)
+  setdiff(con_block, build_block) %>%
+  length %>% `==`(0)
+}
+```
+
+We also check that the sum of building Gifa attached to an URN sum to the value in the establishment data. It turns out everything sums up correctly with a tolerance of 1 either way.
+
+```{r}
+data_files$building %>%
+  group_by(URN) %>% summarise(gifa = sum(Gross.internal.floor.area..m2.)) %>%
+  full_join(data_files$establishment, by = "URN") %>% 
+  mutate(match = isTRUE(all.equal(.data$Gross.internal.floor.area..m2., .data$gifa, tolerance = 1))) %>%
+  filter(!match) %>% select(gifa, Gross.internal.floor.area..m2.)
+```
+
+To avoid issues confusion we rename the gifa variable for buildings
+
+```{r}
+data_files$building <- data_files$building %>% rename(building.GIFA = Gross.internal.floor.area..m2.)
+data_files$establishment <- data_files$establishment %>% rename(school.GIFA = Gross.internal.floor.area..m2.)
+```
+
+We also need to update the information about the number of sites, blocks and gifa for each establishment.  The recorded GIFA, for example, may include the demolished buildings.
+
+```{r}
+# replace gifa and number of blocks in establishment data with newly computed values from building data
+data_files$establishment <- data_files$building %>% group_by(BusinessUnitID) %>%
+    summarise(new.school.GIFA = sum(building.GIFA),
+              new.no.of.block = n()
+              ) %>%
+    right_join(data_files$establishment) %>%
+    select(-school.GIFA, -Number.of.Blocks) %>%
+    rename(school.GIFA = new.school.GIFA,
+           Number.of.Blocks = new.no.of.block)
+
+
+# replace number of sites in establishment data with correct value computed from building data
+data_files$establishment <- data_files$building %>% group_by(BusinessUnitID, SiteID) %>%
+    summarise(new.no.of.sites = n()) %>%
+    group_by(BusinessUnitID) %>%
+    summarise(new.no.of.sites = n()) %>%
+    right_join(data_files$establishment) %>% select(-Number.of.Sites) %>%
+    rename(Number.of.Sites = new.no.of.sites)
+
+
+```
+ 
+ Recall that the previous amendments can be run using `read_PDS_csv() %>% clean_PDS`
+ 
+### Combining the three tables
+ 
+ We now combine the three tables into the one required by the`Blockbuster2` package.  To do so we pass the list of three data files to `create_element`.
+ 
+```{r}
+element_data <- create_element(data_files)
+```
+ 
+Note that `create_element` will work with both the cleaned and then raw data files.  If you use the cleaned files then the number of rows in the output will be the same as the number of rows in the raw component level data frame.  If there are any inconsistancies between the files (i.e. buildings and sites in one file but not another) then you will have more rows.
+ 
+### Cleaning component level data
+
+The component level data requires some pre-processing itself. Everything in this section can be achieved using the function call `clean_element`.
+
+THere are some `NA` entries in the data we need to deal with.  The column `Playing.field.area..m2.` contains the square meterage of playing fields for a school. Inspection shows none of the affected components are playing fields, so the `NA` indicates no playing fields for that school.
+
+```{r}
+element_data %>% filter(is.na(Playing.field.area..m2.)) %>% nrow
+element_data %>% filter(is.na(Playing.field.area..m2.), Element == "Playing Fields")
+```
+
+Similarly, inspecting the `NA` entries in the `WindowsAndDoors` column we find there are only two components that are windows in buildings with `NA` for `WindowsAndDoors`.  Inspection of these two show they are data-entry errors, as can be seen by comparing the data to the PDS report for Kenilworth School and Sports College.  The perimeter should be 100 and the height should be 3.
+
+```{r}
+element_data %>% filter(is.na(WindowsAndDoors), Sub.element == "Windows and doors" )
+```
+We correct the mistaken data entry for this building.
+
+```{r}
+index <- which(element_data$BuildingID == 97667)
+element_data$building.GIFA[index] <- 463
+element_data$Perimeter..m.[index] <- 100
+element_data$Height..m.[index] <- 3
+element_data$Catering.Kitchen[index] <- "No"
+element_data$WindowsAndDoors[index] <- 45 # 15% of wall area is windows according to PDS report.  3 * 100 * 0.15 = 45
+```
+
+We can now replace any `NA`s in `WindowsAndDoors` and `Playing.field.area..m2.` with zeroes.
+
+```{r}
+element_data <- element_data %>% mutate_at(c("Playing.field.area..m2.", "WindowsAndDoors"), funs(replace(., is.na(.), 0)))
+```
+
+Double-checking a few blocks with no windows against the PDS reports (e.g. The Green School) shows that these buildings are things like bike-sheds or other blocks with no windows.
+
+
+There are several `NA` entries in the `Composition` column.  These are harder to deal with.  While it is tempting to say these components are not there, we find some components have a cost attached, or have been assessed to be at a grade other than A.  Some are windows and doors in buildings without windows or doors (or rather, the windows and doors are part of curtain walls and can be considered as part of them).  There are too many to manually assess so we will set them all as 0.
+
+```{r}
+element_data %>% filter(is.na(Composition), Grade != "A") 
+```
+
+```{r}
+element_data <- element_data %>% mutate_at("Composition", funs(replace(., is.na(.), 0)))
+```
+
+#### Remark about areas
+
+It is important to realise that when we compute a measure of size for each component (area, or length, or count), this is affected by the composition field so any components with zero composition will end up with zero size.
+
+#### External areas
+
+External area componenets are treated erratically within the data.  Sometimes they are attached to a single building on a site, sometimes they are all contained in 
+their own block within a site, with no actual building components.  It is better to be consistent and it is also useful for the Deterioration Model if all external areas are located within their own block and not attached to any building.  This way, the cost of repairing external components will not influence the decision to rebuild blocks, which unfairly biases decisions towards those blocks with large external areas.  To do this we simply add 9,000,000 to the building ID for all external components.
+
+```{r}
+element_data <- element_data %>% mutate(BuildingID = case_when(Element == "External Areas" ~ BuildingID + 9000000,
+                                                               TRUE                        ~ as.numeric(BuildingID)))
+```
+
+<red> NOTE: The data does not contain a site-level dataset. Instead, blocks are aggregated straight to establishment level.  This means that things such as \code{boundary} (used to quanitfy the size of components) that are stored at establishment level are aggregated boundaries from potentially multiple sites. This could lead to misquantification of components.  For example, consider a school with two sites, one of which has a boundary fence and the other does not.  The boundary fence will be quantifed using the boundary length of both sites.  There are 753 multi-site establishments this will effect which is small, so we continue as is.<\red>
+
+Recall that all the cleaning in this section is implemented within the `clean_element` function, which takes as an argument the output of `create_element`.
+
+### Quantification of components
+
+The Blockbuster Deterioration Model requires a quantification of the size of a component so it can assign an appropriate estimated repair cost.  To do so we follow the PDS methodology which is incorporated within the `areafy` function.  First we have to make sure the data is the correct type for the function.  This entails converting a variety of character vectors to numeric.  The function `format_element` performs this task. It also removes the extraneous space in the "D " `Grade` level.
+
+```{r}
+element_data <- element_data %>% mutate(Swimming.Pool = case_when(Swimming.Pool == "Yes" ~ 1,
+                                                  Swimming.Pool == "No"  ~ 0),
+                        No.of.Lifts = case_when(No.of.Lifts == "1.000" ~ 1,
+                                                No.of.Lifts == "2.000" ~ 2,
+                                                No.of.Lifts == "3.000" ~ 3,
+                                                No.of.Lifts == "4.000" ~ 4,
+                                                No.of.Lifts == "5.000" ~ 5,
+                                                No.of.Lifts == "6.000" ~ 6,
+                                                TRUE                   ~ 0))
+
+```
+
+Once this is done, the `areafy` function will compute the appropriate size metric for each component as per the PDS proforma (available on request).  There are a few components with negative area these are all small buildings with large numbers of windows/doors.  The estimation of size breaks down as the calculated size of the wall is less than the estimated size of windows (1 sq.m per window).  These negative areas are set to zero by the `areafy` function.
+
+```{r areafy, results = 'hide', cache = TRUE}
+# invisible is used to stop printing the output to console which will cause problems due to the size of the datatable
+element_data <- invisible(element_data %>% areafy)
+```
+
+### Formatting
+
+If we want the tables to be used by the Blockbuster Deterioration model in the
+`Blockbuster2` package we also need to change some column names to match those 
+expected by `Blockbuster2`.
+
+```{r}
+element_data <- element_data %>%
+  rename_element
+```
+
+### Removing non-existent components
+
+We can remove those components which are not components at all, or have zero area.  There are a few component types which are in the data to indicate that something is not present.  For example, that there is no wall paint.  Here are the 139 different component types:
+```{r}
+element_data %>% group_by(Element, Sub.element, Construction.Type) %>% slice(1) %>% select(ElementID, Element, Sub.element, Construction.Type)
+```
+ 
+The Deterioration model will run in less time if we remove the extraneous components.  To do so, use the `remove_element` function.
+
+### Include deterioration rates and repair costs
+
+The tunable parameters of the Blockbuster Deterioration Model are the component
+deterioration rates and the component repair costs by grade.  The default values
+are stored in the files `./data_ext/parameter.table.rda` and `./data_ext/deterioration_rates.rda`.
+
+The deterioration rates can be appended to the data using the function
+`append_deterioration_rates` while the repair costs can be appended using `append_repair_costs`.  Note that these need to be applied to component level tables
+
+These functions look for the appropriate objects in the `./data_ext` folder by default.
+
+### Star Schema Outputs
+
+If we want the output to retain the star schema used by the input, that is that 
+we retain school-, building- and component-level tables, then we can split the 
+data back into three using `split_element`.

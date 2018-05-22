@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="author" content="Peter Curtis" />
+
+<meta name="date" content="2018-05-21" />
+
+<title>Producing a cleaned, formatted data set for use by Blockbuster2</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+
+
+
+<link href="data:text/css;charset=utf-8,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23header%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%20code%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Producing a cleaned, formatted data set for use by Blockbuster2</h1>
+<h4 class="author"><em>Peter Curtis</em></h4>
+<h4 class="date"><em>2018-05-21</em></h4>
+
+
+
+<p>The following code will create an object <code>PDS_single</code> and save it into the <code>./data</code> folder. The object is a single component-level table containing deterioration rates, repair costs, and with ‘empty’ components such as ‘no decoration’ removed. This object uses the deterioration rates produced after the <a href="https://educationgovuk.sharepoint.com/:f:/r/sites/efacam/WorkplaceDocuments/04%20Condition%20and%20Cost%20Intelligence/14_Deterioration_Model/Roger%20Thompson%20Deterioration%20Rate%20QA?csf=1">QA by Roger Thompson</a> and the repair costs from the <a href="https://educationgovuk.sharepoint.com/sites/efacam/_layouts/15/DocIdRedir.aspx?ID=TXETKDDE3KEP-4-5171">final PDSP Cost model</a>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">PDS_single &lt;-<span class="st"> </span><span class="kw">create_PDS</span>(<span class="dt">single_table =</span> <span class="ot">TRUE</span>, <span class="dt">remove_elements =</span> <span class="ot">TRUE</span>, <span class="dt">add_rates =</span> <span class="ot">TRUE</span>, <span class="dt">add_costs =</span> <span class="ot">TRUE</span>)
+<span class="kw">save</span>(PDS_single, <span class="dt">file =</span> <span class="st">&quot;./data/PDS_single.rda&quot;</span>)</code></pre></div>
+<p>Alternatively, the following will produce an object called <code>PDS_excel</code> with the data in a more efficient star schema and without the deterioration rates or costs in readiness for the <code>Blockbuster2</code> version that enables input from an excel sheet that contains the relevant parameters.</p>
+<p>It will save <code>PDS_excel_element.rda</code> into the <code>./data</code> folder which is just the element data (blockbuster will create the building level itself), and it will save <code>PDS_excel.rda</code> into the <code>./data</code> folder which is all levels of data.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">PDS_excel &lt;-<span class="st"> </span><span class="kw">create_PDS</span>()
+PDS_excel_element &lt;-<span class="st"> </span>PDS_excel<span class="op">$</span>element
+<span class="co"># just the element level</span>
+<span class="kw">save</span>(PDS_excel_element, <span class="dt">file =</span> <span class="st">&quot;./data/PDS_excel_element.rda&quot;</span>)
+<span class="co"># all data</span>
+<span class="kw">save</span>(PDS_excel, <span class="dt">file =</span> <span class="st">&quot;./data/PDS_excel.rda&quot;</span>)</code></pre></div>
+<p>The remaining part of this document describes the details of the process behind cleaning, quantifying and formatting the data.</p>
+<div id="combining-the-condition-building-and-establishment-files" class="section level3">
+<h3>Combining the condition, building and establishment files</h3>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># load the files</span>
+data_files &lt;-<span class="st"> </span><span class="kw">read_PDS_csv</span>()</code></pre></div>
+<p>The adjustments identified in this section are incorporated into the <code>clean_PDS</code> function so <code>data_files &lt;- clean_PDS(data_files)</code> will perform all the cleaning identified in this section.</p>
+<div id="malformed-data" class="section level4">
+<h4>Malformed data</h4>
+<p>There is a row in the building csv which has a BusinessUnitID of 15 and no other information. This needs to be removed.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># show building row with no data</span>
+data_files<span class="op">$</span>building <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(BusinessUnitID <span class="op">==</span><span class="st"> </span><span class="dv">15</span>)
+<span class="co">#remove row</span>
+data_files<span class="op">$</span>building &lt;-<span class="st"> </span>data_files<span class="op">$</span>building <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(BusinessUnitID <span class="op">!=</span><span class="st"> </span><span class="dv">15</span>)</code></pre></div>
+</div>
+<div id="consistency-between-files" class="section level4">
+<h4>Consistency between files</h4>
+<p>We next check that there is internal consistency between variables and across files.</p>
+<p>We check the consistency of the three files by checking that there are no buildings, sites or establishments that are missing or extra in the other files.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># These should all return TRUE, i.e. there are no mismatches</span>
+
+<span class="co"># compare building data and establishment</span>
+<span class="kw">setequal</span>(data_files<span class="op">$</span>building<span class="op">$</span>BusinessUnitID, data_files<span class="op">$</span>establishment<span class="op">$</span>BusinessUnitID)
+<span class="kw">setequal</span>(data_files<span class="op">$</span>building<span class="op">$</span>URN, data_files<span class="op">$</span>establishment<span class="op">$</span>URN)
+
+<span class="co"># compare condition data and establishment</span>
+<span class="kw">setequal</span>(data_files<span class="op">$</span>establishment<span class="op">$</span>BusinessUnitID, data_files<span class="op">$</span>condition<span class="op">$</span>BusinessUnitID)
+<span class="kw">setequal</span>(data_files<span class="op">$</span>condition<span class="op">$</span>URN, data_files<span class="op">$</span>establishment<span class="op">$</span>URN)
+
+{
+  est_LADFE &lt;-<span class="st"> </span>data_files<span class="op">$</span>establishment <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">LADFE =</span> <span class="kw">paste</span>(.data<span class="op">$</span>LA.Number, .data<span class="op">$</span>DFE.number..ESTAB.)) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">pull</span>(LADFE)
+  con_LADFE &lt;-<span class="st"> </span>data_files<span class="op">$</span>condition <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">LADFE =</span> <span class="kw">paste</span>(.data<span class="op">$</span>LA.Number, .data<span class="op">$</span>DFE.number..ESTAB.)) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">pull</span>(LADFE)
+  <span class="kw">setequal</span>(est_LADFE, con_LADFE)
+  }
+
+<span class="co"># compare condition and building</span>
+<span class="kw">setequal</span>(data_files<span class="op">$</span>condition<span class="op">$</span>BusinessUnitID, data_files<span class="op">$</span>building<span class="op">$</span>BusinessUnitID)
+<span class="kw">setequal</span>(data_files<span class="op">$</span>condition<span class="op">$</span>SiteID, data_files<span class="op">$</span>building<span class="op">$</span>SiteID)</code></pre></div>
+<p>There are mismatches in <code>SiteID</code>, <code>Site.Reference</code> and <code>BuildingID</code> and the combination <code>Site.Reference</code>/<code>Block.Reference</code> between the condition and building files.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#SiteID</span>
+<span class="kw">setdiff</span>(
+  <span class="kw">union</span>(data_files<span class="op">$</span>building<span class="op">$</span>SiteID, data_files<span class="op">$</span>condition<span class="op">$</span>SiteID),
+  <span class="kw">intersect</span>(data_files<span class="op">$</span>building<span class="op">$</span>SiteID, data_files<span class="op">$</span>condition<span class="op">$</span>SiteID)
+)</code></pre></div>
+<p>The only mismatched <code>SiteID</code> is 5132. This is associated with <code>URN</code> 102890, “Heathfield Junior School”. This school has 4 buildings, but only 2 have associated rows in the condition file. Upon inspection of the PDS report and site plans, the missing buildings were demolished and thus not surveyed.</p>
+<p>We remove the buildings from the building file and adjust the establishment so it reflects the truth (note that the printed PDS report has incorrect GIFA as is includes the demolished blocks)</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># remove site 5132</span>
+data_files<span class="op">$</span>building &lt;-<span class="st"> </span>data_files<span class="op">$</span>building <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(SiteID <span class="op">!=</span><span class="st"> </span><span class="dv">5132</span>)</code></pre></div>
+<p>Note that we will need to update the number of blocks, sites, and GIFA for establishments once all extraneous entries are removed.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># continuing to compare condition and building</span>
+<span class="kw">setequal</span>(data_files<span class="op">$</span>condition<span class="op">$</span>SiteID, data_files<span class="op">$</span>building<span class="op">$</span>SiteID)
+<span class="kw">setequal</span>(data_files<span class="op">$</span>condition<span class="op">$</span>URN, data_files<span class="op">$</span>building<span class="op">$</span>URN)
+<span class="kw">setequal</span>(data_files<span class="op">$</span>condition<span class="op">$</span>Site.Reference, data_files<span class="op">$</span>building<span class="op">$</span>Site.Reference)
+<span class="kw">setequal</span>(data_files<span class="op">$</span>condition<span class="op">$</span>BuildingID, data_files<span class="op">$</span>building<span class="op">$</span>BuildingID)</code></pre></div>
+<p>We also find several building IDs that are in one file but not the other</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">missing_buildings &lt;-<span class="st"> </span><span class="kw">setdiff</span>(
+  <span class="kw">union</span>(data_files<span class="op">$</span>building<span class="op">$</span>BuildingID, data_files<span class="op">$</span>condition<span class="op">$</span>BuildingID),
+  <span class="kw">intersect</span>(data_files<span class="op">$</span>building<span class="op">$</span>BuildingID, data_files<span class="op">$</span>condition<span class="op">$</span>BuildingID)
+) 
+
+missing_buildings</code></pre></div>
+<p>These are all buildings which are not in the condition file as they were not present. Spot checks with published PDS reports and visual inspection of schools through ULT mapping app confirms this. Checked Tavistock Infant School, Ninestiles academy and Ormiston Ilkeston Enterprise Academy.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">URNS &lt;-<span class="st"> </span>data_files<span class="op">$</span>building <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(BuildingID <span class="op">%in%</span><span class="st"> </span>missing_buildings) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">pull</span>(URN)
+data_files<span class="op">$</span>establishment <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(URN <span class="op">%in%</span><span class="st"> </span>URNS)</code></pre></div>
+<p>We remove the missing blocks.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">data_files<span class="op">$</span>building &lt;-<span class="st"> </span>data_files<span class="op">$</span>building <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(<span class="op">!</span>BuildingID <span class="op">%in%</span><span class="st"> </span>missing_buildings)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">setequal</span>(data_files<span class="op">$</span>condition<span class="op">$</span>BuildingID, data_files<span class="op">$</span>building<span class="op">$</span>BuildingID)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># continuing to compare condition and building</span>
+{
+  con_block &lt;-<span class="st"> </span>data_files<span class="op">$</span>condition <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">block =</span> <span class="kw">paste</span>(.data<span class="op">$</span>Site.Reference, .data<span class="op">$</span>Block.Reference)) <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">pull</span>(block)
+  build_block &lt;-<span class="st"> </span>data_files<span class="op">$</span>building <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">block =</span> <span class="kw">paste</span>(.data<span class="op">$</span>Site.Reference, .data<span class="op">$</span>Block.Reference)) <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">pull</span>(block)
+  <span class="kw">setequal</span>(con_block, build_block)
+}</code></pre></div>
+<p>There is one problem <code>setdiff(con_block, build_block)</code> appears as a mismatch. By visually checking the following combination of the two files we see that we have sometimes have ‘08-Library’ in the building file and ‘08-Library, Offices &amp; Ent’ in the condition file.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">full_join</span>(data_files<span class="op">$</span>condition <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(Site.Reference <span class="op">==</span><span class="st"> </span><span class="dv">5029</span>),
+          data_files<span class="op">$</span>building <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(Site.Reference <span class="op">==</span><span class="st"> </span><span class="dv">5029</span>),
+          <span class="dt">by =</span> <span class="st">&quot;BuildingID&quot;</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">select</span>(Site.Reference.x, Site.Reference.y, Block.Reference.x, Block.Reference.y)</code></pre></div>
+<p>We relabel the offending <code>Block.Reference</code> in the condition file.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Relabel 08-Library,Office and Ent in condition file</span>
+data_files<span class="op">$</span>condition &lt;-<span class="st"> </span>data_files<span class="op">$</span>condition <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">mutate</span>(<span class="dt">Block.Reference =</span> <span class="kw">case_when</span>(
+  .data<span class="op">$</span>Site.Reference <span class="op">==</span><span class="st"> </span><span class="dv">5029</span> <span class="op">&amp;</span><span class="st"> </span>Block.Reference <span class="op">==</span><span class="st"> &quot;08-Library, Offices &amp; Ent&quot;</span> <span class="op">~</span><span class="st"> &quot;08-Library&quot;</span>,
+  <span class="ot">TRUE</span> <span class="op">~</span><span class="st"> </span>Block.Reference
+))</code></pre></div>
+<p>And the problem is fixed.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">{
+  con_block &lt;-<span class="st"> </span>data_files<span class="op">$</span>condition <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">block =</span> <span class="kw">paste</span>(.data<span class="op">$</span>Site.Reference, .data<span class="op">$</span>Block.Reference)) <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">pull</span>(block)
+  build_block &lt;-<span class="st"> </span>data_files<span class="op">$</span>building <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">block =</span> <span class="kw">paste</span>(.data<span class="op">$</span>Site.Reference, .data<span class="op">$</span>Block.Reference)) <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">pull</span>(block)
+  <span class="kw">setdiff</span>(con_block, build_block) <span class="op">%&gt;%</span>
+<span class="st">  </span>length <span class="op">%&gt;%</span><span class="st"> `</span><span class="dt">==</span><span class="st">`</span>(<span class="dv">0</span>)
+}</code></pre></div>
+<p>We also check that the sum of building Gifa attached to an URN sum to the value in the establishment data. It turns out everything sums up correctly with a tolerance of 1 either way.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">data_files<span class="op">$</span>building <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">group_by</span>(URN) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">summarise</span>(<span class="dt">gifa =</span> <span class="kw">sum</span>(Gross.internal.floor.area..m2.)) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">full_join</span>(data_files<span class="op">$</span>establishment, <span class="dt">by =</span> <span class="st">&quot;URN&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">match =</span> <span class="kw">isTRUE</span>(<span class="kw">all.equal</span>(.data<span class="op">$</span>Gross.internal.floor.area..m2., .data<span class="op">$</span>gifa, <span class="dt">tolerance =</span> <span class="dv">1</span>))) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(<span class="op">!</span>match) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(gifa, Gross.internal.floor.area..m2.)</code></pre></div>
+<p>To avoid issues confusion we rename the gifa variable for buildings</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">data_files<span class="op">$</span>building &lt;-<span class="st"> </span>data_files<span class="op">$</span>building <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">rename</span>(<span class="dt">building.GIFA =</span> Gross.internal.floor.area..m2.)
+data_files<span class="op">$</span>establishment &lt;-<span class="st"> </span>data_files<span class="op">$</span>establishment <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">rename</span>(<span class="dt">school.GIFA =</span> Gross.internal.floor.area..m2.)</code></pre></div>
+<p>We also need to update the information about the number of sites, blocks and gifa for each establishment. The recorded GIFA, for example, may include the demolished buildings.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># replace gifa and number of blocks in establishment data with newly computed values from building data</span>
+data_files<span class="op">$</span>establishment &lt;-<span class="st"> </span>data_files<span class="op">$</span>building <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">group_by</span>(BusinessUnitID) <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">summarise</span>(<span class="dt">new.school.GIFA =</span> <span class="kw">sum</span>(building.GIFA),
+              <span class="dt">new.no.of.block =</span> <span class="kw">n</span>()
+              ) <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">right_join</span>(data_files<span class="op">$</span>establishment) <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">select</span>(<span class="op">-</span>school.GIFA, <span class="op">-</span>Number.of.Blocks) <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">rename</span>(<span class="dt">school.GIFA =</span> new.school.GIFA,
+           <span class="dt">Number.of.Blocks =</span> new.no.of.block)
+
+
+<span class="co"># replace number of sites in establishment data with correct value computed from building data</span>
+data_files<span class="op">$</span>establishment &lt;-<span class="st"> </span>data_files<span class="op">$</span>building <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">group_by</span>(BusinessUnitID, SiteID) <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">summarise</span>(<span class="dt">new.no.of.sites =</span> <span class="kw">n</span>()) <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">group_by</span>(BusinessUnitID) <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">summarise</span>(<span class="dt">new.no.of.sites =</span> <span class="kw">n</span>()) <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">right_join</span>(data_files<span class="op">$</span>establishment) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(<span class="op">-</span>Number.of.Sites) <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">rename</span>(<span class="dt">Number.of.Sites =</span> new.no.of.sites)</code></pre></div>
+<p>Recall that the previous amendments can be run using <code>read_PDS_csv() %&gt;% clean_PDS</code></p>
+</div>
+</div>
+<div id="combining-the-three-tables" class="section level3">
+<h3>Combining the three tables</h3>
+<p>We now combine the three tables into the one required by the<code>Blockbuster2</code> package. To do so we pass the list of three data files to <code>create_element</code>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">element_data &lt;-<span class="st"> </span><span class="kw">create_element</span>(data_files)</code></pre></div>
+<p>Note that <code>create_element</code> will work with both the cleaned and then raw data files. If you use the cleaned files then the number of rows in the output will be the same as the number of rows in the raw component level data frame. If there are any inconsistancies between the files (i.e. buildings and sites in one file but not another) then you will have more rows.</p>
+</div>
+<div id="cleaning-component-level-data" class="section level3">
+<h3>Cleaning component level data</h3>
+<p>The component level data requires some pre-processing itself. Everything in this section can be achieved using the function call <code>clean_element</code>.</p>
+<p>THere are some <code>NA</code> entries in the data we need to deal with. The column <code>Playing.field.area..m2.</code> contains the square meterage of playing fields for a school. Inspection shows none of the affected components are playing fields, so the <code>NA</code> indicates no playing fields for that school.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">element_data <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(<span class="kw">is.na</span>(Playing.field.area..m2.)) <span class="op">%&gt;%</span><span class="st"> </span>nrow
+element_data <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(<span class="kw">is.na</span>(Playing.field.area..m2.), Element <span class="op">==</span><span class="st"> &quot;Playing Fields&quot;</span>)</code></pre></div>
+<p>Similarly, inspecting the <code>NA</code> entries in the <code>WindowsAndDoors</code> column we find there are only two components that are windows in buildings with <code>NA</code> for <code>WindowsAndDoors</code>. Inspection of these two show they are data-entry errors, as can be seen by comparing the data to the PDS report for Kenilworth School and Sports College. The perimeter should be 100 and the height should be 3.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">element_data <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(<span class="kw">is.na</span>(WindowsAndDoors), Sub.element <span class="op">==</span><span class="st"> &quot;Windows and doors&quot;</span> )</code></pre></div>
+<p>We correct the mistaken data entry for this building.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">index &lt;-<span class="st"> </span><span class="kw">which</span>(element_data<span class="op">$</span>BuildingID <span class="op">==</span><span class="st"> </span><span class="dv">97667</span>)
+element_data<span class="op">$</span>building.GIFA[index] &lt;-<span class="st"> </span><span class="dv">463</span>
+element_data<span class="op">$</span>Perimeter..m.[index] &lt;-<span class="st"> </span><span class="dv">100</span>
+element_data<span class="op">$</span>Height..m.[index] &lt;-<span class="st"> </span><span class="dv">3</span>
+element_data<span class="op">$</span>Catering.Kitchen[index] &lt;-<span class="st"> &quot;No&quot;</span>
+element_data<span class="op">$</span>WindowsAndDoors[index] &lt;-<span class="st"> </span><span class="dv">45</span> <span class="co"># 15% of wall area is windows according to PDS report.  3 * 100 * 0.15 = 45</span></code></pre></div>
+<p>We can now replace any <code>NA</code>s in <code>WindowsAndDoors</code> and <code>Playing.field.area..m2.</code> with zeroes.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">element_data &lt;-<span class="st"> </span>element_data <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">mutate_at</span>(<span class="kw">c</span>(<span class="st">&quot;Playing.field.area..m2.&quot;</span>, <span class="st">&quot;WindowsAndDoors&quot;</span>), <span class="kw">funs</span>(<span class="kw">replace</span>(., <span class="kw">is.na</span>(.), <span class="dv">0</span>)))</code></pre></div>
+<p>Double-checking a few blocks with no windows against the PDS reports (e.g. The Green School) shows that these buildings are things like bike-sheds or other blocks with no windows.</p>
+<p>There are several <code>NA</code> entries in the <code>Composition</code> column. These are harder to deal with. While it is tempting to say these components are not there, we find some components have a cost attached, or have been assessed to be at a grade other than A. Some are windows and doors in buildings without windows or doors (or rather, the windows and doors are part of curtain walls and can be considered as part of them). There are too many to manually assess so we will set them all as 0.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">element_data <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(<span class="kw">is.na</span>(Composition), Grade <span class="op">!=</span><span class="st"> &quot;A&quot;</span>) </code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">element_data &lt;-<span class="st"> </span>element_data <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">mutate_at</span>(<span class="st">&quot;Composition&quot;</span>, <span class="kw">funs</span>(<span class="kw">replace</span>(., <span class="kw">is.na</span>(.), <span class="dv">0</span>)))</code></pre></div>
+<div id="remark-about-areas" class="section level4">
+<h4>Remark about areas</h4>
+<p>It is important to realise that when we compute a measure of size for each component (area, or length, or count), this is affected by the composition field so any components with zero composition will end up with zero size.</p>
+</div>
+<div id="external-areas" class="section level4">
+<h4>External areas</h4>
+<p>External area componenets are treated erratically within the data. Sometimes they are attached to a single building on a site, sometimes they are all contained in their own block within a site, with no actual building components. It is better to be consistent and it is also useful for the Deterioration Model if all external areas are located within their own block and not attached to any building. This way, the cost of repairing external components will not influence the decision to rebuild blocks, which unfairly biases decisions towards those blocks with large external areas. To do this we simply add 9,000,000 to the building ID for all external components.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">element_data &lt;-<span class="st"> </span>element_data <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">mutate</span>(<span class="dt">BuildingID =</span> <span class="kw">case_when</span>(Element <span class="op">==</span><span class="st"> &quot;External Areas&quot;</span> <span class="op">~</span><span class="st"> </span>BuildingID <span class="op">+</span><span class="st"> </span><span class="dv">9000000</span>,
+                                                               <span class="ot">TRUE</span>                        <span class="op">~</span><span class="st"> </span><span class="kw">as.numeric</span>(BuildingID)))</code></pre></div>
+<p><red> NOTE: The data does not contain a site-level dataset. Instead, blocks are aggregated straight to establishment level. This means that things such as  (used to quanitfy the size of components) that are stored at establishment level are aggregated boundaries from potentially multiple sites. This could lead to misquantification of components. For example, consider a school with two sites, one of which has a boundary fence and the other does not. The boundary fence will be quantifed using the boundary length of both sites. There are 753 multi-site establishments this will effect which is small, so we continue as is.&lt;&gt;</p>
+<p>Recall that all the cleaning in this section is implemented within the <code>clean_element</code> function, which takes as an argument the output of <code>create_element</code>.</p>
+</div>
+</div>
+<div id="quantification-of-components" class="section level3">
+<h3>Quantification of components</h3>
+<p>The Blockbuster Deterioration Model requires a quantification of the size of a component so it can assign an appropriate estimated repair cost. To do so we follow the PDS methodology which is incorporated within the <code>areafy</code> function. First we have to make sure the data is the correct type for the function. This entails converting a variety of character vectors to numeric. The function <code>format_element</code> performs this task. It also removes the extraneous space in the “D” <code>Grade</code> level.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">element_data &lt;-<span class="st"> </span>element_data <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">mutate</span>(<span class="dt">Swimming.Pool =</span> <span class="kw">case_when</span>(Swimming.Pool <span class="op">==</span><span class="st"> &quot;Yes&quot;</span> <span class="op">~</span><span class="st"> </span><span class="dv">1</span>,
+                                                  Swimming.Pool <span class="op">==</span><span class="st"> &quot;No&quot;</span>  <span class="op">~</span><span class="st"> </span><span class="dv">0</span>),
+                        <span class="dt">No.of.Lifts =</span> <span class="kw">case_when</span>(No.of.Lifts <span class="op">==</span><span class="st"> &quot;1.000&quot;</span> <span class="op">~</span><span class="st"> </span><span class="dv">1</span>,
+                                                No.of.Lifts <span class="op">==</span><span class="st"> &quot;2.000&quot;</span> <span class="op">~</span><span class="st"> </span><span class="dv">2</span>,
+                                                No.of.Lifts <span class="op">==</span><span class="st"> &quot;3.000&quot;</span> <span class="op">~</span><span class="st"> </span><span class="dv">3</span>,
+                                                No.of.Lifts <span class="op">==</span><span class="st"> &quot;4.000&quot;</span> <span class="op">~</span><span class="st"> </span><span class="dv">4</span>,
+                                                No.of.Lifts <span class="op">==</span><span class="st"> &quot;5.000&quot;</span> <span class="op">~</span><span class="st"> </span><span class="dv">5</span>,
+                                                No.of.Lifts <span class="op">==</span><span class="st"> &quot;6.000&quot;</span> <span class="op">~</span><span class="st"> </span><span class="dv">6</span>,
+                                                <span class="ot">TRUE</span>                   <span class="op">~</span><span class="st"> </span><span class="dv">0</span>))</code></pre></div>
+<p>Once this is done, the <code>areafy</code> function will compute the appropriate size metric for each component as per the PDS proforma (available on request). There are a few components with negative area these are all small buildings with large numbers of windows/doors. The estimation of size breaks down as the calculated size of the wall is less than the estimated size of windows (1 sq.m per window). These negative areas are set to zero by the <code>areafy</code> function.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># invisible is used to stop printing the output to console which will cause problems due to the size of the datatable</span>
+element_data &lt;-<span class="st"> </span><span class="kw">invisible</span>(element_data <span class="op">%&gt;%</span><span class="st"> </span>areafy)</code></pre></div>
+</div>
+<div id="formatting" class="section level3">
+<h3>Formatting</h3>
+<p>If we want the tables to be used by the Blockbuster Deterioration model in the <code>Blockbuster2</code> package we also need to change some column names to match those expected by <code>Blockbuster2</code>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">element_data &lt;-<span class="st"> </span>element_data <span class="op">%&gt;%</span>
+<span class="st">  </span>rename_element</code></pre></div>
+</div>
+<div id="removing-non-existent-components" class="section level3">
+<h3>Removing non-existent components</h3>
+<p>We can remove those components which are not components at all, or have zero area. There are a few component types which are in the data to indicate that something is not present. For example, that there is no wall paint. Here are the 139 different component types:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">element_data <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">group_by</span>(Element, Sub.element, Construction.Type) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">slice</span>(<span class="dv">1</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(ElementID, Element, Sub.element, Construction.Type)</code></pre></div>
+<p>The Deterioration model will run in less time if we remove the extraneous components. To do so, use the <code>remove_element</code> function.</p>
+</div>
+<div id="include-deterioration-rates-and-repair-costs" class="section level3">
+<h3>Include deterioration rates and repair costs</h3>
+<p>The tunable parameters of the Blockbuster Deterioration Model are the component deterioration rates and the component repair costs by grade. The default values are stored in the files <code>./data_ext/parameter.table.rda</code> and <code>./data_ext/deterioration_rates.rda</code>.</p>
+<p>The deterioration rates can be appended to the data using the function <code>append_deterioration_rates</code> while the repair costs can be appended using <code>append_repair_costs</code>. Note that these need to be applied to component level tables</p>
+<p>These functions look for the appropriate objects in the <code>./data_ext</code> folder by default.</p>
+</div>
+<div id="star-schema-outputs" class="section level3">
+<h3>Star Schema Outputs</h3>
+<p>If we want the output to retain the star schema used by the input, that is that we retain school-, building- and component-level tables, then we can split the data back into three using <code>split_element</code>.</p>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

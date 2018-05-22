@@ -1,4 +1,6 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
-^old R$
-^PDS$
+^\\old R$
+^\\PDS$
+^\\data_ext
+

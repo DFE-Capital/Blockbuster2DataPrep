@@ -6,9 +6,9 @@
 #'  \code{building.GIFA} columns
 rename_element <- function(element_data){
   element_data %>%
-    rename(BuildingID = "buildingid",
-           ElementID = "elementid",
-           building.GIFA = "gifa"
+    rename(buildingid = BuildingID,
+           elementid = ElementID,
+           gifa = building.GIFA
     )
 }
 
@@ -40,7 +40,8 @@ split_element <- function(element_data){
   school <- element_data %>%
     group_by(BusinessUnitID) %>%
     slice(1) %>%
-    select(BusinessUnitID, DfENo., URN, Number.of.Sites, school.GIFA,
+    ungroup() %>%
+    select(BusinessUnitID, DfENo, URN, Number.of.Sites, school.GIFA,
            Number.of.Blocks, CurrentStatusDesc, School.Name,
            Site.area.excluding.playing.fields..m2., Playing.field.area..m2.,
            Boundary..m., Swimming.Pool, SurveyDate)
@@ -48,7 +49,8 @@ split_element <- function(element_data){
   building <- element_data %>%
     group_by(buildingid) %>%
     slice(1) %>%
-    select(BusinessUnitID, SiteID, buildingid, DfENo., Site.Reference,
+    ungroup() %>%
+    select(BusinessUnitID, SiteID, buildingid, DfENo, Site.Reference,
            Block.Reference, Building.Type, Listed, No.of.storeys,
            Basement.area..m2., gifa, Ground.Floor.GIFA..m2., Perimeter..m.,
            Height..m., Catering.Kitchen, No.of.Lifts, WindowsAndDoors)
@@ -64,7 +66,7 @@ split_element <- function(element_data){
            -school.GIFA, -Number.of.Blocks, -CurrentStatusDesc, -School.Name,
            -DNRNumber.of.SitesDNR, -Site.area.excluding.playing.fields..m2.,
            -Playing.field.area..m2., -Boundary..m., -Swimming.Pool, -SurveyDate,
-           -ground_floor_present, -unit_area)
+           -ground_floor_present)
 
-  return(element = element, building = building, school = school)
+  return(list(element = element, building = building, school = school))
 }

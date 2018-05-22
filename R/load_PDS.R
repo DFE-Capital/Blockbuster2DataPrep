@@ -131,7 +131,7 @@ clean_PDS <- function(PDS){
 #' @param data The output from \code{\link{read_PDS_csv}} or \code{\link{read_PDS_SQL}}.
 #'
 #' @return The three PDS data files joined into one component-level data.frame.
-create_Element <- function(data){
+create_element <- function(data){
   data$condition %>%
     full_join(data$building) %>%
     full_join(data$establishment)

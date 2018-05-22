@@ -3,6 +3,6 @@
 .RData
 .Ruserdata
 \old R
-\ext_data
+\data_ext
 \PDS
-inst/doc
+

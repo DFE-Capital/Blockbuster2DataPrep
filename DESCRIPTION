@@ -1,19 +1,18 @@
 Package: Blockbuster2DataPrep
 Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Title: Prepares PDS data for use in Blockbuster2
+Version: 1.0.0
+Author: Peter Curtis
+Maintainer: Peter Curtis <peter.curtis@education.gov.uk>
+Description: Processes PDS data so it is usable by the Blockbuster Deterioration
+    Model.
+License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Suggests:
-    testthat,
     dplyr,
     knitr,
-    rmarkdown
-Remotes: DFE-Capital/Blockbuster-2
+    rmarkdown,
+    purrr
 RoxygenNote: 6.0.1
 VignetteBuilder: knitr

@@ -1,0 +1,38 @@
+---
+title: "Data preparation for Blockbuster 2"
+author: "Peter Curtis"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Blockbuster2DataPrep}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This code is used to prepare the raw PDS data (expected to be in csv files "./PDS/PDS_full_establishment.csv" "./PDS/PDS_full_building.csv", "./PDS/PDS_full_condition.csv") for use with the
+[`Blockbuster2` Deterioration Model](https://github.com/DFE-Capital/Blockbuster-2).
+
+The data is not supplied with this package.
+
+The following code will create a single component-level
+table containing deterioration rates, repair costs, and with 'empty' components
+such as 'no decoration' removed.  This object uses the deterioration rates 
+produced after the [QA by Roger Thompson](https://educationgovuk.sharepoint.com/:f:/r/sites/efacam/WorkplaceDocuments/04%20Condition%20and%20Cost%20Intelligence/14_Deterioration_Model/Roger%20Thompson%20Deterioration%20Rate%20QA?csf=1) and the repair costs from the [final PDSP Cost model](https://educationgovuk.sharepoint.com/sites/efacam/_layouts/15/DocIdRedir.aspx?ID=TXETKDDE3KEP-4-5171). 
+
+```{r eval = FALSE}
+create_PDS(single_table = TRUE, remove_elements = TRUE, add_rates = TRUE, add_costs = TRUE)
+```
+
+The following will produce an object with the 
+data in a more efficient star schemaand without the deterioration rates or costs in readiness for the `Blockbuster2` version that enables input from an excel sheet that contains the relevant parameters.
+
+```{r eval = FALSE}
+create_PDS()
+```

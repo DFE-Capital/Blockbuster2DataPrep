@@ -1,10 +1,12 @@
 ---
 title: "Producing a cleaned, formatted data set for use by Blockbuster2"
 author: "Peter Curtis"
-date: "1 May 2018"
-output: 
-  html_document:
-    highlight: "tango"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Blockbuster2DataPrepDetail}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include=FALSE}
@@ -243,13 +245,13 @@ data_files$establishment <- data_files$building %>% group_by(BusinessUnitID, Sit
  
 ### Combining the three tables
  
- We now combine the three tables into the one required by the`Blockbuster2` package.  To do so we pass the list of three data files to `create_Element`.
+ We now combine the three tables into the one required by the`Blockbuster2` package.  To do so we pass the list of three data files to `create_element`.
  
 ```{r}
-element_data <- create_Element(data_files)
+element_data <- create_element(data_files)
 ```
  
-Note that `create_Element` will work with both the cleaned and then raw data files.  If you use the cleaned files then the number of rows in the output will be the same as the number of rows in the raw component level data frame.  If there are any inconsistancies between the files (i.e. buildings and sites in one file but not another) then you will have more rows.
+Note that `create_element` will work with both the cleaned and then raw data files.  If you use the cleaned files then the number of rows in the output will be the same as the number of rows in the raw component level data frame.  If there are any inconsistancies between the files (i.e. buildings and sites in one file but not another) then you will have more rows.
  
 ### Cleaning component level data
 

@@ -9,9 +9,9 @@
 #' @return A data frame with \code{ab}, \code{bc}, \code{cd} and \code{de}
 #'  columns appended appropriately.
 append_deterioration_rates <- function(element_data,
-                                       deterioration_rates = "./data_ext/deterioration.rates.rda"){
+                                       deterioration_rates = "./data_ext/deterioration_rates.rds"){
   if(is.character(deterioration_rates))
-    deterioration_rates <- load(file.path(deterioration_rates))
+    deterioration_rates <- readRDS(file.path(deterioration_rates))
   element_data %>% left_join(deterioration_rates %>%
                                select(elementid, ab, bc, cd, de),
                              by = "elementid")
@@ -32,9 +32,9 @@ append_deterioration_rates <- function(element_data,
 #' @return A data frame with appropriately appended columns giving unit repair
 #'  costs and element specific repair costs.
 append_repair_costs <- function(element_data,
-                                repair_costs = "./data_ext/parameter.table.rda"){
+                                repair_costs = "./data_ext/parameter_table.rds"){
   if(is.character(repair_costs))
-    repair_costs <- load(file.path(repair_costs))
+    repair_costs <- readRDS(file.path(repair_costs))
   element_data %>% left_join(repair_costs %>%
                                select(elementid, B.repair.cost, C.repair.cost,
                                       D.repair.cost, E.repair.cost),

@@ -1,4 +1,3 @@
-
 #' Add size quantification to PDS data
 #'
 #' @param data A dataframe that contains \code{Element}, \code{sub_Element},
@@ -7,7 +6,6 @@
 #' @return The dataframe with an added variable called \code{unit_area}
 #'  which quantifies the size of the Element using the appropriate formula for
 #'   each component type
-#'
 areafy <- function(data) {
   data %>% group_by(buildingid) %>%
     # add flag to indicate presence of ground floor - this is used when calculating suspended floor size

@@ -16,6 +16,8 @@
 #' @inheritParams append_repair_costs
 #' @inheritParams remove_element
 #'
+#' @export
+#'
 #' @return The default behaviours is to produce a list of three tables (school-level,
 #' building-level and component-level) containing all elements from the PDS data, with columns containing the unit_area and probability of being at each grade (which will be one or zero).
 #'
@@ -53,12 +55,12 @@ create_PDS <- function(single_table = FALSE,
                        building_sep = ",",
                        condition_path = "./PDS/PDS_full_condition.csv",
                        condition_sep = "\t",
-                       repair_costs = "./data_ext/parameter.table.rda",
-                       deterioration_rates = "./data_ext/deterioration.rates.rda",
+                       repair_costs = "./data_ext/parameter_table.rds",
+                       deterioration_rates = "./data_ext/deterioration_rates.rds",
                        elementid = c(1810, 1952, 1838, 1845, 1869, 1891, 1918, 1992, 1994)
                        ){
   # load PDS data (from csv or from SQL, depending on arguments)
-  data <- read_PDS_csv(establishment_path = establishment_path,
+  read_PDS_csv(establishment_path = establishment_path,
                        establishment_sep = establishment_sep,
                        building_path = building_path,
                        building_sep = building_sep,
@@ -70,7 +72,8 @@ create_PDS <- function(single_table = FALSE,
     create_element() %>%
     # remove unwanted elements
     when(
-      remove_elements ~ remove_element(., elementid = elementid)
+      remove_elements ~ remove_element(., elementid = elementid),
+      ~ .
     ) %>%
     # clean element level data
     clean_element() %>%
@@ -82,16 +85,22 @@ create_PDS <- function(single_table = FALSE,
     areafy() %>%
     # add deterioration rates
     when(
-      add_rates ~ append_deterioration_rates(., deterioration_rates = deterioration_rates)
+      add_rates ~ append_deterioration_rates(., deterioration_rates = deterioration_rates),
+      ~ .
     ) %>%
     # add repair costs
     when(
-      add_costs ~ append_repair_costs(., repair_costs = repair_costs)
+      add_costs ~ append_repair_costs(., repair_costs = repair_costs),
+      ~ .
     ) %>%
     # put into wide format for blockbuster 2 package
-    widen ~ widen_element(.) %>%
+    when(
+      widen ~ widen_element(.),
+      ~ .
+    ) %>%
     # split into three files
     when(
-      single_table == FALSE ~ split_element(.)
+      single_table == FALSE ~ split_element(.),
+      ~ .
     )
 }
